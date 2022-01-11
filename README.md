@@ -6,6 +6,8 @@
 ## Commands
 - `?ranks`
   - Bot will respond with the current leaderboards
+- `?today`
+  - Bot will respond with the leaderboards based on only today's puzzle data
 - `?info <user>`
   - Bot will respond with a list of all the user's entries in the database (passing no user will default to the asking user)
 - `?add <user> <puzzle output>`
@@ -21,7 +23,11 @@ Adding a score without `?add`:
 
 Viewing the leaderboard with `?ranks`:
 
-<img width="629" alt="image" src="https://user-images.githubusercontent.com/25470007/148973941-391ccba7-6ae2-45dc-af60-c5dea7a6ce91.png">
+<img width="629" alt="image" src="https://user-images.githubusercontent.com/25470007/149010216-54579ed9-7457-4fba-b332-bec0f167f299.png">
+
+Viewing today's leaderboard with `?today`:
+
+<img width="629" alt="image" src="https://user-images.githubusercontent.com/25470007/149010273-a6f512b6-eced-47e3-8bc5-834a6dde78fc.png">
 
 ## Notes
 
