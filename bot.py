@@ -1,6 +1,7 @@
 import os, re, json
 import statistics as stats
 import discord
+from datetime import date
 
 # parse environment variables
 token = os.getenv('DISCORD_TOKEN')
@@ -90,9 +91,11 @@ def add_score(ps: PuzzleScore) -> None:
         db[ps.puzzle_num] = [entry]
     write_db()
 
-def get_ranked_users() -> list[User]:
+def get_ranked_users(puzzle_num = None) -> list[User]:
     users = []
     for puzzle in sorted(db.keys()):
+        if puzzle_num is not None and puzzle_num != puzzle:
+            continue
         for entry in db[puzzle]:
             user_id = entry['user_id']
             score = entry['score']
@@ -139,11 +142,25 @@ async def on_message(message):
 
         if cmd.startswith("?"):
             # ?ranks
-            if cmd == '?ranks':
+            if cmd == "?ranks":
                 output = "Current Rankings:"
                 for user in get_ranked_users():
-                    output += "\n\t{}. <@{}> \t`(Average: {:.2f}/6, 🟩: {:.2f}, 🟨: {:.2f}, ⬜: {:.2f})`" \
-                        .format(user.rank, user.user_id, user.averages[0], user.averages[1], user.averages[2], user.averages[3])
+                    output += "\n\t{}. <@{}>  **{:.2f}**/6  (`🟩 {:.2f}` `🟨 {:.2f}` `⬜ {:.2f}` `🧩 {}`)" \
+                        .format(user.rank, user.user_id, user.averages[0], user.averages[1], user.averages[2], user.averages[3], len(user.scores))
+                await message.channel.send(output)
+            
+            # ?today
+            elif cmd == "?today":
+                arbitrary_date = date(2022, 1, 10)
+                arbitrary_date_puzzle = 205
+                todays_date = date.today()
+                todays_puzzle = str(arbitrary_date_puzzle + (todays_date - arbitrary_date).days)
+
+                output = "Today's Wordle Leaderboard (Puzzle #{}):".format(todays_puzzle)
+                for user in get_ranked_users(puzzle_num=todays_puzzle):
+                    puzzle_data = user.scores[todays_puzzle]
+                    output += "\n\t{}. <@{}>  **{}**/6  (`🟩 {}` `🟨 {}` `⬜ {}`)" \
+                        .format(user.rank, user.user_id, puzzle_data.score, puzzle_data.green, puzzle_data.yellow, puzzle_data.other)
                 await message.channel.send(output)
 
             # ?info
@@ -154,7 +171,7 @@ async def on_message(message):
                     if user.user_id == query_user_id:
                         for puzzle_num in user.scores.keys():
                             ps = user.scores[puzzle_num]
-                            output += "\n\t- Puzzle #{}: {}/6 `(🟩: {}, 🟨: {}, ⬜: {})`" \
+                            output += "\n\t- 🧩 #{}: {}/6 (`🟩 {}` `🟨 {}` `⬜ {}`)" \
                                 .format(puzzle_num, ps.score, ps.green, ps.yellow, ps.other)
                 await message.channel.send(output)
             
