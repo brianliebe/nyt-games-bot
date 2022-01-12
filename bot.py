@@ -1,13 +1,22 @@
-import os, re, json
+import os, re, json, io
 import statistics as stats
 import discord
+from discord import file
+import pandas as pd
 from datetime import date
+
+from pandas.core.reshape.melt import wide_to_long
+
+from bokeh.io.export import get_screenshot_as_png
+from bokeh.models import ColumnDataSource, DataTable, TableColumn
+from selenium import webdriver
+from PIL import Image, ImageChops
 
 # parse environment variables
 token = os.getenv('DISCORD_TOKEN')
 guild_id = os.getenv('GUILD_ID')
 
-# build Discord client
+# build Discord clientwh
 intents = discord.Intents.default()
 intents.members = True
 d = discord.Client(intents=intents)
@@ -68,19 +77,32 @@ class User():
         self.scores[ps.puzzle_num] = ps
         self.averages = self.get_avgs()
 
-    def get_avgs(self) -> float:
+    def get_avgs(self) -> list[float]:
         scores, greens, yellows, others = [], [], [], []
         for puzzle_num in self.scores.keys():
             scores.append(self.scores[puzzle_num].score)
             greens.append(self.scores[puzzle_num].green)
             yellows.append(self.scores[puzzle_num].yellow)
             others.append(self.scores[puzzle_num].other)
-        return [stats.mean(scores), stats.mean(greens), stats.mean(yellows), stats.mean(others)]
+        return [
+                float("{:.2f}".format(stats.mean(scores))),
+                float("{:.2f}".format(stats.mean(greens))),
+                float("{:.2f}".format(stats.mean(yellows))),
+                float("{:.2f}".format(stats.mean(others)))
+            ]
+
 
 def write_db() -> None:
     f = open("database.json", "w")
     f.write(json.dumps(db, indent=4, sort_keys=True))
     f.close()
+
+def get_nickname(user_id) -> str:
+    guild = d.get_guild(int(guild_id))
+    for member in guild.members:
+        if member.id == user_id:
+            return member.display_name
+    return "?"
 
 def add_score(ps: PuzzleScore) -> None:
     entry = {'user_id' : ps.user_id, 'score' : ps.score, 'green' : ps.green, \
@@ -123,6 +145,37 @@ def get_ranked_users(puzzle_num = None) -> list[User]:
             user.rank = i + 1
     return users
 
+def trim(image):
+    if image is None: return None
+    rgb_image = image.convert('RGB')
+    width, height = image.size
+    for y in reversed(range(height)):
+        for x in range(width):
+            rgb = rgb_image.getpixel((x,y))
+            if rgb != (255, 255, 255):
+                if x < 10:
+                    return rgb_image.crop([5, 5, width, y])
+                else:
+                    return rgb_image.crop([5, 5, width, y + 5])
+    return None
+
+def get_output_image(df, filename):
+    source = ColumnDataSource(df)
+
+    df_columns = df.columns.values
+    columns_for_table=[]
+    for column in df_columns:
+        columns_for_table.append(TableColumn(field=column, title=column))
+
+    data_table = DataTable(source=source, columns=columns_for_table, index_position=None, autosize_mode='fit_viewport')
+
+    options = webdriver.firefox.options.Options()
+    options.headless = True
+    service = webdriver.firefox.service.Service('geckodriver')
+    generated = get_screenshot_as_png(data_table, driver=webdriver.Firefox(options=options, service=service))
+    generated = trim(generated)
+    return generated
+
 # the only event handler we need, for incoming messages
 @d.event
 async def on_message(message):
@@ -143,11 +196,24 @@ async def on_message(message):
         if cmd.startswith("?"):
             # ?ranks
             if cmd == "?ranks":
-                output = "Current Rankings:"
+                df = pd.DataFrame(columns=['Rank', 'User', 'Average', '🟩', '🟨', '⬜', '🧩'])
                 for user in get_ranked_users():
-                    output += "\n\t{}. <@{}>  **{:.2f}**/6  (`🟩 {:.2f}` `🟨 {:.2f}` `⬜ {:.2f}` `🧩 {}`)" \
-                        .format(user.rank, user.user_id, user.averages[0], user.averages[1], user.averages[2], user.averages[3], len(user.scores))
-                await message.channel.send(output)
+                    df.loc[user.rank] = [
+                            user.rank, 
+                            get_nickname(user.user_id),
+                            "{}/6".format(user.averages[0]),
+                            user.averages[1],
+                            user.averages[2],
+                            user.averages[3],
+                            len(user.scores)
+                        ]
+                output_image = get_output_image(df, "leaderboard")
+                if output_image is not None:
+                    with io.BytesIO() as image_binary:
+                        output_image.save(image_binary, 'PNG')
+                        image_binary.seek(0)
+                        await message.channel.send("Current Leaderboard 😘", \
+                                file=discord.File(fp=image_binary, filename='image.png'))
             
             # ?today
             elif cmd == "?today":
@@ -156,12 +222,25 @@ async def on_message(message):
                 todays_date = date.today()
                 todays_puzzle = str(arbitrary_date_puzzle + (todays_date - arbitrary_date).days)
 
-                output = "Today's Wordle Leaderboard (Puzzle #{}):".format(todays_puzzle)
+                df = pd.DataFrame(columns=['Rank', 'User', 'Score', '🟩', '🟨', '⬜', '🧩'])
                 for user in get_ranked_users(puzzle_num=todays_puzzle):
                     puzzle_data = user.scores[todays_puzzle]
-                    output += "\n\t{}. <@{}>  **{}**/6  (`🟩 {}` `🟨 {}` `⬜ {}`)" \
-                        .format(user.rank, user.user_id, puzzle_data.score, puzzle_data.green, puzzle_data.yellow, puzzle_data.other)
-                await message.channel.send(output)
+                    df.loc[user.rank] = [
+                            user.rank, 
+                            get_nickname(user.user_id),
+                            "{}/6".format(puzzle_data.score),
+                            puzzle_data.green,
+                            puzzle_data.yellow,
+                            puzzle_data.other,
+                            len(user.scores)
+                        ]
+                output_image = get_output_image(df, "todays_leaderboard")
+                if output_image is not None:
+                    with io.BytesIO() as image_binary:
+                        output_image.save(image_binary, 'PNG')
+                        image_binary.seek(0)
+                        await message.channel.send("Today's Leaderboard (🧩 #{})".format(todays_puzzle), \
+                                file=discord.File(fp=image_binary, filename='image.png'))
 
             # ?info
             elif cmd.startswith("?info"):
