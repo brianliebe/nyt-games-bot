@@ -11,6 +11,10 @@ from bokeh.io.export import get_screenshot_as_png
 from bokeh.models import ColumnDataSource, DataTable, TableColumn
 from selenium import webdriver
 from PIL import Image, ImageChops
+from pyvirtualdisplay import Display
+from webdriver_manager.chrome import ChromeDriverManager
+
+os.environ['WDM_LOG_LEVEL'] = '0'
 
 # parse environment variables
 token = os.getenv('DISCORD_TOKEN')
@@ -69,27 +73,35 @@ class User():
         self.user_id = user_id
         self.scores = {}
         self.rank = None
-        self.averages = None
+        self.true_average, self.calc_average = None, None
+        self.avg_green, self.avg_yellow, self.avg_other = None, None, None
+
         if first_score is not None:
             self.add(first_score)
 
     def add(self, ps: PuzzleScore) -> None:
         self.scores[ps.puzzle_num] = ps
-        self.averages = self.get_avgs()
+        self.calculate_avgs()
 
-    def get_avgs(self) -> list[float]:
+    def calculate_avgs(self) -> None:
         scores, greens, yellows, others = [], [], [], []
         for puzzle_num in self.scores.keys():
             scores.append(self.scores[puzzle_num].score)
             greens.append(self.scores[puzzle_num].green)
             yellows.append(self.scores[puzzle_num].yellow)
             others.append(self.scores[puzzle_num].other)
-        return [
-                float("{:.2f}".format(stats.mean(scores))),
-                float("{:.2f}".format(stats.mean(greens))),
-                float("{:.2f}".format(stats.mean(yellows))),
-                float("{:.2f}".format(stats.mean(others)))
-            ]
+        self.true_average = stats.mean(scores)
+        self.avg_green = stats.mean(greens)
+        self.avg_yellow = stats.mean(yellows)
+        self.avg_other = stats.mean(others)
+
+    def calculate_adj_avg(self, total_games) -> None:
+        scores = []
+        for puzzle_num in self.scores.keys():
+            scores.append(self.scores[puzzle_num].score)
+        for _ in range(total_games - len(self.scores)):
+            scores.append(7)
+        self.calc_average = stats.mean(scores)
 
 
 def write_db() -> None:
@@ -136,13 +148,34 @@ def get_ranked_users(puzzle_num = None) -> list[User]:
                 new_user = User(user_id, first_score = ps)
                 users.append(new_user)
 
-    users.sort(key = lambda e: (e.averages[0], e.averages[3], e.averages[2], e.averages[1]))
+    if puzzle_num is None:
+        print(max([len(x.scores) for x in users]))
+        for user in users:
+            user.calculate_adj_avg(max([len(x.scores) for x in users]))
+        users.sort(key = lambda u: (u.calc_average, u.avg_other, u.avg_yellow, u.avg_green))
+    else:
+        users.sort(key = lambda u: (u.true_average, u.avg_other, u.avg_yellow, u.avg_green))
 
     for i, user in enumerate(users):
-        if i > 0 and user.averages == users[i - 1].averages:
-            user.rank = users[i - 1].rank
-        else:
-            user.rank = i + 1
+        if i > 0:
+            prev = users[i - 1]
+            if puzzle_num is None:
+                # ?ranks
+                if prev.calc_average == user.calc_average and \
+                        prev.avg_other == user.avg_other and \
+                        prev.avg_yellow == user.avg_yellow and \
+                        prev.avg_green == user.avg_green:
+                    user.rank = prev.rank
+                    continue
+            else:
+                # ?today
+                if prev.true_average == user.true_average and \
+                        prev.avg_other == user.avg_other and \
+                        prev.avg_yellow == user.avg_yellow and \
+                        prev.avg_green == user.avg_green:
+                    user.rank = prev.rank
+                    continue
+        user.rank = i + 1
     return users
 
 def trim(image):
@@ -169,10 +202,17 @@ def get_output_image(df, filename):
 
     data_table = DataTable(source=source, columns=columns_for_table, index_position=None, autosize_mode='fit_viewport')
 
-    options = webdriver.firefox.options.Options()
-    options.headless = True
-    service = webdriver.firefox.service.Service('geckodriver')
-    generated = get_screenshot_as_png(data_table, driver=webdriver.Firefox(options=options, service=service))
+    chrome_options = webdriver.ChromeOptions()
+
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument("--window-size=1024,768")
+    chrome_options.add_argument('--no-proxy-server')
+    chrome_options.add_argument("--proxy-server='direct://'");
+    chrome_options.add_argument("--proxy-bypass-list=*");
+
+    service = webdriver.chrome.service.Service(ChromeDriverManager().install())
+    generated = get_screenshot_as_png(data_table, driver=webdriver.Chrome(service=service, options=chrome_options))
+
     generated = trim(generated)
     return generated
 
@@ -201,10 +241,10 @@ async def on_message(message):
                     df.loc[user.rank] = [
                             user.rank, 
                             get_nickname(user.user_id),
-                            "{}/6".format(user.averages[0]),
-                            user.averages[1],
-                            user.averages[2],
-                            user.averages[3],
+                            "{:.2f}/6 ({:.2f}/6)".format(user.calc_average, user.true_average),
+                            "{:.2f}".format(user.avg_green),
+                            "{:.2f}".format(user.avg_yellow),
+                            "{:.2f}".format(user.avg_other),
                             len(user.scores)
                         ]
                 output_image = get_output_image(df, "leaderboard")
