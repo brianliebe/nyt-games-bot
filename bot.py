@@ -235,6 +235,7 @@ async def on_message(message):
             message_content = ""
 
         if cmd.startswith("?"):
+            
             # ?ranks
             if cmd == "?ranks":
                 df = pd.DataFrame(columns=['Rank', 'User', 'Average', '🟩', '🟨', '⬜', '🧩'])
@@ -279,6 +280,7 @@ async def on_message(message):
                         await message.channel.send("Today's Leaderboard (🧩 #{})".format(todays_puzzle), \
                                 file=discord.File(fp=image_binary, filename='image.png'))
 
+            # ?missing
             elif cmd == "?missing":
                 todays_puzzle = get_todays_puzzle()
                 all_users = [u.user_id for u in get_ranked_users()]
