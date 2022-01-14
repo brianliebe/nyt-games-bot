@@ -145,7 +145,6 @@ def get_ranked_users(puzzle_num = None) -> list[User]:
                 users.append(new_user)
 
     if puzzle_num is None:
-        print(max([len(x.scores) for x in users]))
         for user in users:
             user.calculate_adj_avg(max([len(x.scores) for x in users]))
         users.sort(key = lambda u: (u.calc_average, u.avg_other, u.avg_yellow, u.avg_green))
