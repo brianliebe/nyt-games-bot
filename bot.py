@@ -1,19 +1,15 @@
 import os, re, json, io
 import statistics as stats
 import discord
-from discord import file
 import pandas as pd
+
 from datetime import date
-
-from pandas.core.reshape.melt import wide_to_long
-
 from bokeh.io.export import get_screenshot_as_png
 from bokeh.models import ColumnDataSource, DataTable, TableColumn
 from selenium import webdriver
-from PIL import Image, ImageChops
-from pyvirtualdisplay import Display
 from webdriver_manager.chrome import ChromeDriverManager
 
+# turn off logging for webdriver manager
 os.environ['WDM_LOG_LEVEL'] = '0'
 
 # parse environment variables
@@ -192,7 +188,7 @@ def trim(image):
                     return rgb_image.crop([5, 5, width, y + 5])
     return None
 
-def get_output_image(df, filename):
+def get_output_image(df):
     source = ColumnDataSource(df)
 
     df_columns = df.columns.values
@@ -207,14 +203,20 @@ def get_output_image(df, filename):
     chrome_options.add_argument('--headless')
     chrome_options.add_argument("--window-size=1024,768")
     chrome_options.add_argument('--no-proxy-server')
-    chrome_options.add_argument("--proxy-server='direct://'");
-    chrome_options.add_argument("--proxy-bypass-list=*");
+    chrome_options.add_argument("--proxy-server='direct://'")
+    chrome_options.add_argument("--proxy-bypass-list=*")
 
     service = webdriver.chrome.service.Service(ChromeDriverManager().install())
     generated = get_screenshot_as_png(data_table, driver=webdriver.Chrome(service=service, options=chrome_options))
 
     generated = trim(generated)
     return generated
+
+def get_todays_puzzle() -> str:
+    arbitrary_date = date(2022, 1, 10)
+    arbitrary_date_puzzle = 205
+    todays_date = date.today()
+    return str(arbitrary_date_puzzle + (todays_date - arbitrary_date).days)
 
 # the only event handler we need, for incoming messages
 @d.event
@@ -247,7 +249,7 @@ async def on_message(message):
                             "{:.2f}".format(user.avg_other),
                             len(user.scores)
                         ]
-                output_image = get_output_image(df, "leaderboard")
+                output_image = get_output_image(df)
                 if output_image is not None:
                     with io.BytesIO() as image_binary:
                         output_image.save(image_binary, 'PNG')
@@ -257,11 +259,7 @@ async def on_message(message):
             
             # ?today
             elif cmd == "?today":
-                arbitrary_date = date(2022, 1, 10)
-                arbitrary_date_puzzle = 205
-                todays_date = date.today()
-                todays_puzzle = str(arbitrary_date_puzzle + (todays_date - arbitrary_date).days)
-
+                todays_puzzle = get_todays_puzzle()
                 df = pd.DataFrame(columns=['Rank', 'User', 'Score', '🟩', '🟨', '⬜', '🧩'])
                 for user in get_ranked_users(puzzle_num=todays_puzzle):
                     puzzle_data = user.scores[todays_puzzle]
@@ -274,13 +272,27 @@ async def on_message(message):
                             puzzle_data.other,
                             len(user.scores)
                         ]
-                output_image = get_output_image(df, "todays_leaderboard")
+                output_image = get_output_image(df)
                 if output_image is not None:
                     with io.BytesIO() as image_binary:
                         output_image.save(image_binary, 'PNG')
                         image_binary.seek(0)
                         await message.channel.send("Today's Leaderboard (🧩 #{})".format(todays_puzzle), \
                                 file=discord.File(fp=image_binary, filename='image.png'))
+
+            elif cmd == "?missing":
+                todays_puzzle = get_todays_puzzle()
+                all_users = [u.user_id for u in get_ranked_users()]
+                todays_users = [u.user_id for u in get_ranked_users(puzzle_num=todays_puzzle)]
+                missing_users = []
+                for user_id in all_users:
+                    if not user_id in todays_users:
+                        missing_users.append("<@{}>".format(user_id))
+                if len(missing_users) > 0:
+                    output = "The following users are missing today's puzzle (#{}): {}".format(todays_puzzle, ", ".join(missing_users))
+                else:
+                    output = "All known users have submitted today!"
+                await message.channel.send(output)
 
             # ?info
             elif cmd.startswith("?info"):
