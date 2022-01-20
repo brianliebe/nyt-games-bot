@@ -5,7 +5,7 @@ import pandas as pd
 from discord import user
 from discord import message
 from discord.ext import commands
-from datetime import date
+from datetime import date, datetime, timezone, timedelta
 from bokeh.io.export import get_screenshot_as_png
 from bokeh.models import ColumnDataSource, DataTable, TableColumn
 from selenium import webdriver
@@ -142,6 +142,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     def get_todays_puzzle(self) -> str:
         arbitrary_date = date(2022, 1, 10)
         arbitrary_date_puzzle = 205
+        todays_date = datetime.now(timezone(timedelta(hours=-5), 'EST'))
         todays_date = date.today()
         return str(arbitrary_date_puzzle + (todays_date - arbitrary_date).days)
 
