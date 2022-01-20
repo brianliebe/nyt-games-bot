@@ -160,6 +160,8 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 success = await self.__add_score(message.author.id, title, content, message.channel)
                 if success:
                     await message.add_reaction('✅')
+                else:
+                    await message.add_reaction('❌')
 
     @commands.guild_only()
     @commands.command(name='missing')
@@ -236,7 +238,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             puzzle_num, score, _ = re.findall(r'\d+', title)
             score = int(score)
 
-        entry = PuzzleEntry(user_id, score, 
+        entry = PuzzleEntry(puzzle_num, user_id, score, 
                 puzzle.count('🟩'),
                 puzzle.count('🟨'),
                 puzzle.count('⬜') + puzzle.count('⬛'))
@@ -261,7 +263,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             await ctx.message.add_reaction('✅')
         else:
             await ctx.reply("Failed to save the database!")
-            
+
     def save(self) -> bool:
         db = open('db.json', 'w')
         full_dict = {}
