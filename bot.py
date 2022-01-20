@@ -38,8 +38,8 @@ if __name__ == '__main__':
 @bot.event
 async def on_ready():
     db = {}
-    if os.path.exists("database.json"):
-        db = json.loads(open("database.json").read())
+    if os.path.exists("db.json"):
+        db = json.loads(open("db.json").read())
     for puzzle_num in sorted(db.keys()):
         puzzle = Puzzle(puzzle_num)
         for puzzle_entry in db[puzzle_num]:
