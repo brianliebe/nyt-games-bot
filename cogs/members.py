@@ -6,7 +6,7 @@ from bokeh.io.export import get_screenshot_as_png
 from bokeh.models import ColumnDataSource, DataTable, TableColumn
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
-from puzzle import Puzzle, PuzzleEntry
+from puzzle import Puzzle, PuzzleEntry, PuzzlePlayer
 
 class MembersCog(commands.Cog, name="Normal Members Commands"):
 
@@ -244,9 +244,12 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 puzzle.count('⬜') + puzzle.count('⬛'))
 
         if puzzle_num not in self.bot.puzzles.keys():
-            self.bot.puzzles[puzzle_num] = Puzzle(puzzle_num, entry=entry)
-        else:
-            self.bot.puzzles[puzzle_num].add(entry)
+            self.bot.puzzles[puzzle_num] = Puzzle(puzzle_num)
+        self.bot.puzzles[puzzle_num].add(entry)
+
+        if user_id not in self.bot.players.keys():
+            self.bot.players[user_id] = PuzzlePlayer(user_id)
+        self.bot.players[user_id].add(entry)
 
         return self.save()
 
