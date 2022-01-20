@@ -157,7 +157,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             title = message.content[0:message.content.index('\n')].strip()
             content = message.content[message.content.index('\n') + 1:].strip()
             if self.is_wordle_submission(title):
-                success = await self.__add_score(message.author.id, title, content, message.channel)
+                success = await self.__add_score(int(message.author.id), title, content, message.channel)
                 if success:
                     await message.add_reaction('✅')
                 else:
@@ -214,11 +214,11 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     async def add_score(self, ctx, *args):
         if args is not None and len(args) >= 4:
             if self.is_user(args[0]):
-                user_id = args[0].strip("<>@! ")
+                user_id = int(args[0].strip("<>@! "))
                 title = ' '.join(args[1:4])
                 content = '\n'.join(args[4:])
             else:
-                user_id = ctx.author.id
+                user_id = int(ctx.author.id)
                 title = ' '.join(args[0:3])
                 content = '\n'.join(args[3:])
             if self.is_wordle_submission(title):
