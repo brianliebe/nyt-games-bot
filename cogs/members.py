@@ -1,5 +1,6 @@
 import discord, re, io, json
 import pandas as pd
+import statistics as stats
 from discord.ext import commands
 from datetime import date, datetime, timezone, timedelta
 from bokeh.io.export import get_screenshot_as_png
@@ -14,7 +15,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
         self.bot = bot
 
     @commands.guild_only()
-    @commands.command(name='ranks')
+    @commands.command(name='ranks', help='Shows guild-wide ranks based on past scores')
     async def get_ranks(self, ctx, *args):
         if len(args) == 0:
             valid_puzzles = self.get_puzzles(limit=7)
@@ -97,10 +98,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             for x in range(width):
                 rgb = rgb_image.getpixel((x,y))
                 if rgb != (255, 255, 255):
-                    if x < 10:
-                        return rgb_image.crop([5, 5, width, y])
-                    else:
-                        return rgb_image.crop([5, 5, width, y + 5])
+                    return rgb_image.crop([5, 5, width, y + 5])
         return None
 
     def get_table_image(self, df):
@@ -114,7 +112,6 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
         data_table = DataTable(source=source, columns=columns_for_table, index_position=None, autosize_mode='fit_viewport')
 
         chrome_options = webdriver.ChromeOptions()
-
         chrome_options.add_argument('--headless')
         chrome_options.add_argument("--window-size=1024,768")
         chrome_options.add_argument('--no-proxy-server')
@@ -164,7 +161,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     await message.add_reaction('❌')
 
     @commands.guild_only()
-    @commands.command(name='missing')
+    @commands.command(name='missing', help='Shows all players missing an entry for a puzzle')
     async def get_missing(self, ctx, *args):
         if len(args) == 0:
             puzzle_num = self.get_todays_puzzle()
@@ -180,14 +177,14 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             await ctx.reply("The following players are missing Puzzle #{}: <@{}>".format(puzzle_num, '>, <@'.join(missing_ids)))
 
     @commands.guild_only()
-    @commands.command(name='info')
-    async def get_info(self, ctx, *args):
+    @commands.command(name='entries', help='Shows all recorded entries for a player')
+    async def get_entries(self, ctx, *args):
         if len(args) == 0:
             query_id = ctx.author.id
         elif len(args) == 1 and self.is_user(args[0]):
             query_id = int(args[0].strip("<@!> "))
         else:
-            await ctx.reply("Couldn't understand command. Try `?info` or `?info <user>`.")
+            await ctx.reply("Couldn't understand command. Try `?entries` or `?entries <user>`.")
             return
 
         if query_id in self.bot.players.keys():
@@ -196,21 +193,53 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             for i, puzzle_num in enumerate(sorted(player.get_puzzles())):
                 entry = player.get_entry(puzzle_num)
                 df.loc[i] = [f"#{puzzle_num}", f"{entry.score}/6", entry.green, entry.yellow, entry.other]
-            info_img = self.get_table_image(df)
-            if info_img is not None:
+            entries_img = self.get_table_image(df)
+            if entries_img is not None:
                 with io.BytesIO() as image_binary:
-                    info_img.save(image_binary, 'PNG')
+                    entries_img.save(image_binary, 'PNG')
                     image_binary.seek(0)
                     player.refresh_stats(self.get_puzzles(limit=None))
-                    await ctx.reply("{} games found, with an average score of {:.2f}/6.".format(len(player.get_puzzles()), player.raw_mean), \
+                    await ctx.reply("{} games found:", \
                         file=discord.File(fp=image_binary, filename='image.png'))
             else:
-                await ctx.reply("Sorry, there was an issue fetching info. Please try again later.")
+                await ctx.reply("Sorry, there was an issue fetching entries. Please try again later.")
         else:
             await ctx.reply(f"Couldn't find any recorded entries for <@{query_id}>.")
 
     @commands.guild_only()
-    @commands.command(name='add')
+    @commands.command(name="stats", help="Shows basic stats for a player")
+    async def get_stats(self, ctx, *args):
+        if len(args) == 0:
+            query_id = ctx.author.id
+        elif len(args) == 1 and self.is_user(args[0]):
+            query_id = int(args[0].strip("<@!> "))
+        else:
+            await ctx.reply("Couldn't understand command. Try `?stats` or `?stats <user>`.")
+
+        if query_id in self.bot.players.keys():
+            player = self.bot.players[query_id]
+            df = pd.DataFrame(columns=['User', 'Puzzles', 'Missed', 'Avg Score', 'Avg 🟩', 'Avg 🟨', 'Avg ⬜'])
+            df.loc[0] = [
+                self.get_nickname(query_id),
+                len(player.get_puzzles()),
+                len(self.bot.puzzles.keys()) - len(player.get_puzzles()),
+                "{:.4f}".format(stats.mean([e.score for e in player.entries.values()])),
+                "{:.4f}".format(stats.mean([e.green for e in player.entries.values()])),
+                "{:.4f}".format(stats.mean([e.yellow for e in player.entries.values()])),
+                "{:.4f}".format(stats.mean([e.other for e in player.entries.values()])),
+            ]
+            stats_img = self.get_table_image(df)
+            if stats_img is not None:
+                with io.BytesIO() as image_binary:
+                    stats_img.save(image_binary, 'PNG')
+                    image_binary.seek(0)
+                    player.refresh_stats(self.get_puzzles(limit=None))
+                    await ctx.reply(file=discord.File(fp=image_binary, filename='image.png'))
+        else:
+            await ctx.reply(f"Couldn't find any recorded entries for <@{query_id}>.")
+
+    @commands.guild_only()
+    @commands.command(name='add', help='Manually adds a puzzle entry for a player')
     async def add_score(self, ctx, *args):
         if args is not None and len(args) >= 4:
             if self.is_user(args[0]):
@@ -260,7 +289,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
         return re.match(r'^Wordle \d{3} \d{1}/\d{1}$', title) or re.match(r'^Wordle \d{3} X/\d{1}$', title)
 
     @commands.guild_only()
-    @commands.command(name='save')
+    @commands.command(name='save', help='Saves all data to the database (done automatically)')
     async def manual_save(self, ctx, *args):
         if self.save():
             await ctx.message.add_reaction('✅')
