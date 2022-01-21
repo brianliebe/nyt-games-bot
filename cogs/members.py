@@ -199,7 +199,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     entries_img.save(image_binary, 'PNG')
                     image_binary.seek(0)
                     player.refresh_stats(self.get_puzzles(limit=None))
-                    await ctx.reply("{} games found:", \
+                    await ctx.reply("{} games found:".format(len(player.get_puzzles())), \
                         file=discord.File(fp=image_binary, filename='image.png'))
             else:
                 await ctx.reply("Sorry, there was an issue fetching entries. Please try again later.")
