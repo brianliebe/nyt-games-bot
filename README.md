@@ -2,38 +2,38 @@
 ### Simple Discord Bot that tracks users' Wordle scores and maintains a leaderboard!
 ### 🟩 🟨 ⬜
 
-
 ## Commands
-- `?ranks`
-  - Bot will respond with the current leaderboards
-- `?today`
-  - Bot will respond with the leaderboards based on only today's puzzle data
-- `?info <user>`
-  - Bot will respond with a list of all the user's entries in the database (passing no user will default to the asking user)
-- `?add <user> <puzzle output>`
-  - Bot will add an entry to the database for the specified user. Please user shift+enter between the user and the puzzle output.
-  
-**NOTE:** Simply copy-pasting the Wordle results into the Discord server will alert the Bot, and it will automatically add the result into the database. The point of `?add` is just to allow users to add other users' scores if need be.
+- `?ranks (today|week|all-time|<puzzle #>)`
+  - Bot will reply with the ranked leaderboard based on the query time period/puzzle #. Defaults to week.
+- `?missing [today|<puzzle #>]`
+  - Bot will reply and @mention users that are missing the puzzle. Defaults to today.
+- `?entries [<user>]`
+  - Bot will reply with the recorded entries in the database for <user>. Defaults to requester.
+- `?stats [<user1> <user2> ...]`
+  - Bot will reply with data on the user's average scores, etc. Defaults to requester. (More data coming soon maybe...)
+- `?add [<user>] <puzzle output>`
+  - Bot will record the Wordle puzzle entry for a user. Defaults to requester.
+  - NOTE: `?add` is NOT needed to record entries. Just paste the output from Wordle right into the the channel and the bot will record it. The bot will react to your message with a ✅ to let you know it has been counted.
 
 ## Example Usage
 
-Adding a score without `?add`:
+1. Adding a score without `?add`:
 
-<img width="629" alt="image" src="https://user-images.githubusercontent.com/25470007/148973925-d6d06a74-d33e-4bb4-a68c-cd511f6e056f.png">
+![image](https://user-images.githubusercontent.com/25470007/150624652-18f34aea-aab8-4187-bf19-6a41f3c2ec85.png)
 
-Viewing the leaderboard with `?ranks`:
+2. Viewing the leaderboard with `?ranks`:
 
-<img width="629" alt="image" src="https://user-images.githubusercontent.com/25470007/149010216-54579ed9-7457-4fba-b332-bec0f167f299.png">
+![image](https://user-images.githubusercontent.com/25470007/150624623-4b9e7043-88b7-446b-bd0e-02bc999d6006.png)
 
-Viewing today's leaderboard with `?today`:
+3. Viewing today's leaderboard with `?today`:
 
-<img width="629" alt="image" src="https://user-images.githubusercontent.com/25470007/149010273-a6f512b6-eced-47e3-8bc5-834a6dde78fc.png">
+![image](https://user-images.githubusercontent.com/25470007/150624781-5ff68297-c62f-4d69-a228-50680d37fc96.png)
 
 ## Notes
 
-This is by no means a complete project, just something I threw together for fun. Feel free to branch or really do whatever you want with it. There are some other implementations of this type of Discord Bot for Wordle on the internet already. Check those out too!
+This is by no means complete and you might need some tweaking to get this up-and-running on a new server. I continuously am adding to it, so this README might becoming outdated! As of writing, all the commands are guild_only, so this is probably only feasible for my use-case. Would take some minor tweaking of the Cogs to get that changed.
 
-The "database" this bot uses is literally just a .json file that I'm storing the results into, not a real database, so it goes without saying that this is not meant to be used heavily on some massive server. There's a ton of ideas I have to add to this, but it might just not be necessary for my use-case. Again, feel free to add whatever.
+The "database" this bot uses is literally just a .json file that I'm storing the results into, not a real database, so it goes without saying that this is not meant to be used heavily on some massive server.
 
 To deploy this yourself, I highly suggest taking a look at [this](https://realpython.com/how-to-make-a-discord-bot-python/) guide.
 
@@ -42,4 +42,3 @@ To deploy this yourself, I highly suggest taking a look at [this](https://realpy
 - Add permissioning so that only specific users may enter scores (and/or only some users may use `?add`)
 - Add permissioning so that only specific channels may be used
 - Add a better database implementation
-- Add a class that can be used and stored while the program is running, instead of building the objects from the database each time it's queried. It is not at all efficient right now -- just simple.
