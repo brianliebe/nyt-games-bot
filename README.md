@@ -5,7 +5,7 @@
 ## Commands
 - `?ranks (today|week|all-time|<puzzle #>)`
   - Bot will reply with the ranked leaderboard based on the query time period/puzzle #. Defaults to week.
-- `?missing [today|<puzzle #>]`
+- `?missing (today|<puzzle #>)`
   - Bot will reply and @mention users that are missing the puzzle. Defaults to today.
 - `?entries [<user>]`
   - Bot will reply with the recorded entries in the database for <user>. Defaults to requester.
