@@ -153,7 +153,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
         if '\n' in message.content:
             title = message.content[0:message.content.index('\n')].strip()
             content = message.content[message.content.index('\n') + 1:].strip()
-            if self.is_wordle_submission(title):
+            if utilities.is_wordle_submission(title):
                 success = await self.__add_score(int(message.author.id), title, content, message.channel)
                 if success:
                     await message.add_reaction('✅')
@@ -267,7 +267,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 user_id = int(ctx.author.id)
                 title = ' '.join(args[0:3])
                 content = '\n'.join(args[3:])
-            if self.is_wordle_submission(title):
+            if utilities.is_wordle_submission(title):
                 success = await self.__add_score(user_id, title, content, ctx)
                 if success:
                     await ctx.message.add_reaction('✅')
@@ -275,7 +275,6 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             await ctx.reply("To manually add a Wordle score, please use `?add <user> <Wordle output>` (specifying a user is optional).")
 
 
-    @commands.guild_only()
     async def __add_score(self, user_id, title, puzzle, channel) -> bool:
         if 'X/6' in title:
             puzzle_num, _ = re.findall(r'\d+', title)
@@ -297,10 +296,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             self.bot.players[user_id] = PuzzlePlayer(user_id)
         self.bot.players[user_id].add(entry)
 
-        return self.save()
-
-    def is_wordle_submission(self, title) -> str:
-        return re.match(r'^Wordle \d{3} \d{1}/\d{1}$', title) or re.match(r'^Wordle \d{3} X/\d{1}$', title)
+        return utilities.save(self.bot)
 
     @commands.guild_only()
     @commands.command()
