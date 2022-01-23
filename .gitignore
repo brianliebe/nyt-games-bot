@@ -128,7 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-database.json
-db.json
+/*.json
 geckodriver*
 .DS_Store

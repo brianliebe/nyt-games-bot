@@ -100,7 +100,8 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             for x in range(0, max(15, width)):
                 rgb = rgb_image.getpixel((x, y))
                 if rgb != (255, 255, 255):
-                    if x < 10 and rgb == (254, 254, 254):
+                    # account for differences in browsers
+                    if x < 10 and rgb in [(254, 254, 254), (240, 240, 240)]:
                         return rgb_image.crop([5, 5, width, y])
                     else:
                         return rgb_image.crop([5, 5, width, y + 8])
