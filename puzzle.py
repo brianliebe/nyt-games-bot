@@ -27,7 +27,13 @@ class PuzzlePlayer():
 
     def get_entry(self, puzzle_num):
         return self.entries[puzzle_num] if puzzle_num in self.get_puzzles() else None
-    
+
+    def remove_entry(self, puzzle_num):
+        if puzzle_num in self.entries.keys():
+            del self.entries[puzzle_num]
+            return True
+        return False
+
     def refresh_stats(self, puzzles):
         missed_games = len([p for p in puzzles if p not in self.get_puzzles()])
         self.raw_mean = stats.mean([e.score for e in self.entries.values() if e.puzzle_num in puzzles])
@@ -51,7 +57,13 @@ class Puzzle():
             self.add(entry)
 
     def add(self, puzzle_entry):
-        self.entries[puzzle_entry.user_id] = puzzle_entry 
+        self.entries[puzzle_entry.user_id] = puzzle_entry
+
+    def remove_entry(self, user_id):
+        if user_id in self.entries.keys():
+            del self.entries[user_id]
+            return True
+        return False
 
     def get_users(self):
         return self.entries.keys()

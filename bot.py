@@ -23,13 +23,13 @@ intents = discord.Intents.default()
 intents.members = True
 client = discord.Client(intents=intents)
  
-bot = commands.Bot(command_prefix='?', intents=intents)
+bot = commands.Bot(command_prefix='?', intents=intents, help_command=None)
 bot.guild_id = int(guild_id)
 bot.puzzles = {}
 bot.players = {}
 
 if __name__ == '__main__':
-    for extension in ['cogs.members']:
+    for extension in ['cogs.members', 'cogs.owner']:
         try:
             bot.load_extension(extension)
         except Exception as e:
