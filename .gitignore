@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 database.json
+db.json
 geckodriver*
 .DS_Store
