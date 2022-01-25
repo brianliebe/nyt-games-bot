@@ -14,7 +14,7 @@ guild_id = os.getenv('GUILD_ID')
 intents = discord.Intents.default()
 intents.members = True
 client = discord.Client(intents=intents)
-activity = discord.Game(name="BOT IS DOWN!") if discord_env == 'DEV' else discord.game(name="?help")
+activity = discord.Game(name="BOT IS DOWN!") if discord_env == 'DEV' else discord.Game(name="?help")
  
 bot = commands.Bot(command_prefix='?', intents=intents, activity=activity, help_command=None)
 bot.guild_id = int(guild_id)
