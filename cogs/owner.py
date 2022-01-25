@@ -1,5 +1,4 @@
-import discord, re, io, json
-import utilities
+import re
 from discord.ext import commands
 
 class OwnerCog(commands.Cog, name="Owner-Only Commands"):
@@ -10,21 +9,19 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
     @commands.is_owner()
     @commands.command(name='save', help='Saves all data to the database (done automatically)')
     async def manual_save(self, ctx, *args):
-        if utilities.save(self.bot):
-            await ctx.message.add_reaction('✅')
-        else:
-            await ctx.reply("Failed to save the database!")
+        self.bot.utils.save()
+        await ctx.message.add_reaction('✅')
 
     @commands.is_owner()
     @commands.command(name="remove", help="Removes one puzzle entry for a player")
     async def remove_entry(self, ctx, *args):
-        if len(args) == 1 and utilities.is_user(args[0]):
+        if len(args) == 1 and self.bot.utils.is_user(args[0]):
             query_id = int(args[0].strip("<@!> "))
-            puzzle_num = utilities.get_todays_puzzle()
+            puzzle_num = self.bot.utils.get_todays_puzzle()
         elif len(args) == 1 and re.match(r"^\d+$", args[0]):
             query_id = ctx.author.id
             puzzle_num = args[0].strip()
-        elif len(args) == 2 and utilities.is_user(args[0]) and re.match(r"^\d+$", args[1]):
+        elif len(args) == 2 and self.bot.utils.is_user(args[0]) and re.match(r"^\d+$", args[1]):
             query_id = int(args[0].strip("<@!> "))
             puzzle_num = args[1].strip()
         else:
@@ -36,11 +33,9 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
             puzzle_player = self.bot.players[query_id]
             if puzzle.remove_entry(query_id):
                 if puzzle_player.remove_entry(puzzle_num):
-                    if utilities.save(self.bot):
-                        await ctx.message.add_reaction('✅')
-                        return
-                    else:
-                        print("ERROR: Saving failed!")
+                    self.bot.utils.save()
+                    await ctx.message.add_reaction('✅')
+                    return
                 else:
                     print("ERROR: Player entry removal failed!")
             else:
@@ -48,6 +43,24 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
             await ctx.message.add_reaction('❌')
         else:
             await ctx.reply(f"Could not find entry for Puzzle #{puzzle_num} for user <@{query_id}>.")
+
+    @commands.is_owner()
+    @commands.command(name='add', help='Manually adds a puzzle entry for a player')
+    async def add_score(self, ctx, *args):
+        if args is not None and len(args) >= 4:
+            if self.bot.utils.is_user(args[0]):
+                user_id = int(args[0].strip("<>@! "))
+                title = ' '.join(args[1:4])
+                content = '\n'.join(args[4:])
+            else:
+                user_id = int(ctx.author.id)
+                title = ' '.join(args[0:3])
+                content = '\n'.join(args[3:])
+            if self.bot.utils.is_wordle_submission(title):
+                self.bot.utils.add_entry(user_id, title, content)
+                await ctx.message.add_reaction('✅')
+        else:
+            await ctx.reply("To manually add a Wordle score, please use `?add <user> <Wordle output>` (specifying a user is optional).")
 
 
 def setup(bot):
