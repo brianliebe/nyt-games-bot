@@ -102,8 +102,8 @@ class BotUtilities():
 
     # SAVE/LOAD
 
-    def save(self):
-        f = open('db2.json', 'w', encoding='utf-8')
+    def save(self, filename: str = 'database.json'):
+        f = open(filename, 'w', encoding='utf-8')
         db = {}
         for user_id in self.bot.players.keys():
             player = self.bot.players[user_id]
@@ -115,24 +115,25 @@ class BotUtilities():
         f.write(json.dumps(db, indent=4, sort_keys=True, ensure_ascii=False))
         f.close()
 
-    def load_database(self, filename = 'db.json') -> bool:
+    def load(self, filename: str = 'database.json') -> bool:
         db = {}
         if os.path.exists(filename):
             db = json.loads(open(filename).read())
-        for puzzle_num in sorted(db.keys()):
-            puzzle = Puzzle(puzzle_num)
-            for puzzle_entry in db[puzzle_num]:
-                user_id = puzzle_entry['user_id']
+        for user_id_str in db.keys():
+            user_id = int(user_id_str)
+            for puzzle_num in db[user_id_str]['entries'].keys():
+                db_entry = db[user_id_str]['entries'][puzzle_num]
                 if user_id not in self.bot.players.keys():
                     self.bot.players[user_id] = PuzzlePlayer(user_id)
+                if puzzle_num not in self.bot.puzzles.keys():
+                    self.bot.puzzles[puzzle_num] = Puzzle(puzzle_num)
                 entry = PuzzleEntry(puzzle_num, \
                                     user_id, \
-                                    self.get_sunday(puzzle_num).strftime(f'%m/%d/%Y'), \
-                                    puzzle_entry['score'], \
-                                    puzzle_entry['green'], \
-                                    puzzle_entry['yellow'], \
-                                    puzzle_entry['other'])
-                puzzle.add(entry)
+                                    db_entry['week'], \
+                                    db_entry['score'], \
+                                    db_entry['green'], \
+                                    db_entry['yellow'], \
+                                    db_entry['other'])
                 self.bot.players[user_id].add(entry)
-            self.bot.puzzles[puzzle_num] = puzzle
+                self.bot.puzzles[puzzle_num].add(entry)
         return True

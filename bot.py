@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 @bot.event
 async def on_ready():
-    if bot.utils.load_database():
+    if bot.utils.load():
         print("Database loaded & successfully logged in.")
     else:
         print("Failed to load database!")
