@@ -1,56 +1,81 @@
 import discord, re, io
-from numpy import average
 import pandas as pd
 import statistics as stats
+from enum import Enum, auto
 from discord.ext import commands
-from bokeh.io.export import get_screenshot_as_png
-from bokeh.models import ColumnDataSource, DataTable, TableColumn
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from puzzle import Puzzle, PuzzleEntry, PuzzlePlayer
+from datetime import timedelta
+from utils.bot_utilities import BotUtilities
+from utils.database_handler import DatabaseHandler
+from utils.puzzle import PuzzleEntry, PuzzlePlayer
+from utils.puzzle_handler import PuzzleHandler
+from utils.player_handler import PlayerHandler
+
+class PuzzleQueryType(Enum):
+    SINGLE_PUZZLE = auto()
+    MULTI_PUZZLE = auto()
+    ALL_TIME = auto()
 
 class MembersCog(commands.Cog, name="Normal Members Commands"):
 
+    MAX_DATAFRAME_ROWS = 10
+
     def __init__(self, bot):
         self.bot = bot
+        self.puzzles: PuzzleHandler = self.bot.puzzles
+        self.players: PlayerHandler = self.bot.players
+        self.utils: BotUtilities = self.bot.utils
+        self.db: DatabaseHandler = self.bot.db
 
     @commands.guild_only()
     @commands.command(name='ranks', help='Shows guild-wide ranks based on past scores')
     async def get_ranks(self, ctx, *args):
-        if len(args) == 0:
-            todays_puzzle_num = int(self.bot.utils.get_todays_puzzle())
-            this_weeks_puzzles = self.bot.utils.get_puzzles_by_week(self.bot.utils.get_sunday(todays_puzzle_num))
-            valid_puzzles = [pn for pn in this_weeks_puzzles if int(pn) <= todays_puzzle_num]
+        if len(args) == 0 or (len(args) == 1 and args[0] in ['week', 'weekly']):
+            # WEEKLY
+            start_of_week = self.utils.get_week_start(self.utils.get_todays_date())
+            todays_puzzle_id = self.puzzles.get_puzzle_by_date(self.utils.get_todays_date())
+            valid_puzzles = [p_id for p_id in self.puzzles.get_puzzles_by_week(start_of_week) if p_id <= todays_puzzle_id]
             explanation_str = "This Week (so far)"
-        elif len(args) == 1 and args[0] in ['7day', '7-day']:
-            valid_puzzles = self.get_puzzles(limit=7)
-            explanation_str = "Last 7 Days"
+            query_type = PuzzleQueryType.MULTI_PUZZLE
+        elif len(args) == 1 and args[0] in ['10day', '10-day']:
+            # 10-DAY AVERAGE
+            seven_days_ago_puzzle = self.puzzles.get_puzzle_by_date(self.utils.get_todays_date() - timedelta(days=10))
+            valid_puzzles = list(range(seven_days_ago_puzzle, seven_days_ago_puzzle + 10))
+            explanation_str = "Last 10 Days"
+            query_type = PuzzleQueryType.MULTI_PUZZLE
         elif len(args) == 1 and args[0] in ['alltime', 'all-time']:
-            valid_puzzles = self.get_puzzles(limit=None)
+            # ALL TIME
+            valid_puzzles = self.puzzles.get_all_puzzles()
             explanation_str = "All-time"
+            query_type = PuzzleQueryType.ALL_TIME
         elif len(args) == 1 and args[0] == 'today':
-            valid_puzzles = self.get_puzzles(limit=1)
+            # TODAY ONLY
+            valid_puzzles = [self.puzzles.get_puzzle_by_date(self.utils.get_todays_date())]
             explanation_str = f"Puzzle #{valid_puzzles[0]}"
-        elif len(args) == 1 and re.match(r'^\d+$', args[0]):
-            valid_puzzles = [args[0].strip("# ")]
+            query_type = PuzzleQueryType.SINGLE_PUZZLE
+        elif len(args) == 1 and re.match(r'^[#]?\d+$', args[0]):
+            # SPECIFIC PUZZLE ONLY
+            valid_puzzles = [int(args[0].strip("# "))]
             explanation_str = f"Puzzle #{valid_puzzles[0]}"
-        elif len(args) == 1 and self.bot.utils.is_date(args[0]):
-            query_date = self.bot.utils.get_date_from_str(args[0])
-            todays_puzzle_num = int(self.bot.utils.get_todays_puzzle())
-            if self.bot.utils.is_valid_week(query_date):
-                valid_puzzles = [pn for pn in self.bot.utils.get_puzzles_by_week(query_date) if int(pn) <= todays_puzzle_num]
-                explanation_str = f"Week of {query_date}"
+            query_type = PuzzleQueryType.SINGLE_PUZZLE
+        elif len(args) == 1 and self.utils.is_date(args[0]):
+            # WEEKLY (BY SPECIFIC DATE)
+            query_date = self.utils.get_date_from_str(args[0])
+            todays_puzzle_id = self.puzzles.get_puzzle_by_date(self.utils.get_todays_date())
+            if self.utils.is_sunday(query_date):
+                valid_puzzles = [p_id for p_id in self.puzzles.get_puzzles_by_week(query_date) if p_id <= todays_puzzle_id]
+                explanation_str = f"Week of {self.utils.convert_date_to_str(query_date)}"
+                query_type = PuzzleQueryType.MULTI_PUZZLE
             else:
                 await ctx.reply("Query date is not a Sunday. Try `?help ranks`.")
                 return
         else:
-            await ctx.reply("Couldn't understand your command. Try `?ranks`, `?ranks today`, `?ranks all-time`, `?ranks <puzzle #>`, or `?ranks <MM/DD/YYYY of week>`.")
+            await ctx.reply("Couldn't understand your command. Try `?help ranks`.")
             return
 
-        players = []
-        for user_id in self.bot.players.keys():
-            player = self.bot.players[user_id]
-            intersection = list(set(player.get_puzzles()).intersection(valid_puzzles))
+        players: list[PuzzlePlayer] = []
+        for user_id in self.players.get_ids():
+            player = self.players.get(user_id)
+            intersection = list(set(player.get_ids()).intersection(valid_puzzles))
             if len(intersection) > 0:
                 player.generate_stats(puzzles=valid_puzzles)
                 players.append(player)
@@ -59,14 +84,14 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             await ctx.reply(f"Sorry, no users could be found for this query.")
             return
 
-        if explanation_str != 'All-time':
+        if query_type != PuzzleQueryType.ALL_TIME:
             # for all queries except 'All-time', we rank based on the adjusted mean
             players.sort(key = lambda p: (p.stats['adj_mean'], p.stats['avg_other'], p.stats['avg_yellow'], p.stats['avg_green']))
         else:
             # for all-time queries, we must rank on the raw score (since adj. will be skewed)
             players.sort(key = lambda p: (p.stats['raw_mean'], p.stats['avg_other'], p.stats['avg_yellow'], p.stats['avg_green']))
 
-        if len(valid_puzzles) == 1:
+        if query_type == PuzzleQueryType.SINGLE_PUZZLE:
             # stats for just 1 puzzle
             df = pd.DataFrame(columns=['Rank', 'User', 'Score', '🟩', '🟨', '⬜'])
             for i, player in enumerate(players):
@@ -74,57 +99,54 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     player.rank = players[i - 1].rank
                 else:
                     player.rank = i + 1
-                if i <= 10:
+                if i <= self.MAX_DATAFRAME_ROWS:
                     df.loc[i] = [   
                                     player.rank, 
-                                    self.bot.utils.get_nickname(player.user_id),
+                                    self.utils.get_nickname(player.user_id),
                                     f"{player.stats['raw_mean']}/6",
                                     f"{player.stats['avg_green']}",
                                     f"{player.stats['avg_yellow']}",
                                     f"{player.stats['avg_other']}"
                                 ]
-        else:
-            # stats for 2+ puzzles, NOT all-time
-            if explanation_str != 'All-time':
-                df = pd.DataFrame(columns=['Rank', 'User', 'Average', '🟩', '🟨', '⬜', '🧩', '🚫'])
-                for i, player in enumerate(players):
-                    if i > 0 and player.get_avgs() == players[i - 1].get_avgs():
-                        player.rank = players[i - 1].rank
-                    else:
-                        player.rank = i + 1
-                    if i <= 10:
-                        entry = [   
-                                    player.rank, 
-                                    self.bot.utils.get_nickname(player.user_id),
-                                    "{:.2f}/6 ({:.2f}/6)".format(player.stats['adj_mean'], player.stats['raw_mean']),
-                                    "{:.2f}".format(player.stats['avg_green']),
-                                    "{:.2f}".format(player.stats['avg_yellow']),
-                                    "{:.2f}".format(player.stats['avg_other']),
-                                    len(valid_puzzles) - player.stats['missed_games'],
-                                    player.stats['missed_games']
-                                ]
-                        df.loc[i] = entry
+        elif query_type == PuzzleQueryType.MULTI_PUZZLE:
+            # stats for 2+ puzzles, but not all-time
+            df = pd.DataFrame(columns=['Rank', 'User', 'Average', '🟩', '🟨', '⬜', '🧩', '🚫'])
+            for i, player in enumerate(players):
+                if i > 0 and player.get_avgs() == players[i - 1].get_avgs():
+                    player.rank = players[i - 1].rank
+                else:
+                    player.rank = i + 1
+                if i <= self.MAX_DATAFRAME_ROWS:
+                    df.loc[i] = [   
+                                player.rank, 
+                                self.bot.utils.get_nickname(player.user_id),
+                                "{:.2f}/6 ({:.2f}/6)".format(player.stats['adj_mean'], player.stats['raw_mean']),
+                                "{:.2f}".format(player.stats['avg_green']),
+                                "{:.2f}".format(player.stats['avg_yellow']),
+                                "{:.2f}".format(player.stats['avg_other']),
+                                len(valid_puzzles) - player.stats['missed_games'],
+                                player.stats['missed_games']
+                            ]
+        elif query_type == PuzzleQueryType.ALL_TIME:
             # stats for 2+ puzzles, for all-time
-            else:
-                df = pd.DataFrame(columns=['Rank', 'User', 'Average', '🟩', '🟨', '⬜', '🧩'])
-                for i, player in enumerate(players):
-                    if i > 0 and player.get_avgs() == players[i - 1].get_avgs():
-                        player.rank = players[i - 1].rank
-                    else:
-                        player.rank = i + 1
-                    if i <= 10:
-                        entry = [   
-                                    player.rank, 
-                                    self.bot.utils.get_nickname(player.user_id),
-                                    "{:.2f}/6".format(player.stats['raw_mean']),
-                                    "{:.2f}".format(player.stats['avg_green']),
-                                    "{:.2f}".format(player.stats['avg_yellow']),
-                                    "{:.2f}".format(player.stats['avg_other']),
-                                    len(valid_puzzles) - player.stats['missed_games']
-                                ]
-                        df.loc[i] = entry
+            df = pd.DataFrame(columns=['Rank', 'User', 'Average', '🟩', '🟨', '⬜', '🧩'])
+            for i, player in enumerate(players):
+                if i > 0 and player.get_avgs() == players[i - 1].get_avgs():
+                    player.rank = players[i - 1].rank
+                else:
+                    player.rank = i + 1
+                if i <= self.MAX_DATAFRAME_ROWS:
+                    df.loc[i] = [   
+                                player.rank, 
+                                self.bot.utils.get_nickname(player.user_id),
+                                "{:.2f}/6".format(player.stats['raw_mean']),
+                                "{:.2f}".format(player.stats['avg_green']),
+                                "{:.2f}".format(player.stats['avg_yellow']),
+                                "{:.2f}".format(player.stats['avg_other']),
+                                len(valid_puzzles) - player.stats['missed_games']
+                            ]
 
-        ranks_img = self.get_table_image(df)
+        ranks_img = self.utils.get_image_from_df(df)
 
         if ranks_img is not None:
             with io.BytesIO() as image_binary:
@@ -135,53 +157,6 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
         else:
             await ctx.reply("Sorry, there was an issue fetching ranks. Please try again later.")
 
-    def trim_image(self, image):
-        if image is None: return None
-        rgb_image = image.convert('RGB')
-        width, height = image.size
-        for y in reversed(range(height)):
-            for x in range(0, max(15, width)):
-                rgb = rgb_image.getpixel((x, y))
-                if rgb != (255, 255, 255):
-                    # account for differences in browsers
-                    if x < 10 and rgb in [(254, 254, 254), (240, 240, 240)]:
-                        return rgb_image.crop([5, 5, width, y])
-                    else:
-                        return rgb_image.crop([5, 5, width, y + 8])
-
-        return rgb_image
-
-    def get_table_image(self, df):
-        source = ColumnDataSource(df)
-
-        df_columns = df.columns.values
-        columns_for_table=[]
-        for column in df_columns:
-            columns_for_table.append(TableColumn(field=column, title=column))
-
-        data_table = DataTable(source=source, columns=columns_for_table, index_position=None, autosize_mode='fit_viewport', reorderable=False)
-
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('--headless')
-        chrome_options.add_argument("--window-size=1024,768")
-        chrome_options.add_argument('--no-proxy-server')
-        chrome_options.add_argument("--proxy-server='direct://'")
-        chrome_options.add_argument("--proxy-bypass-list=*")
-
-        service = webdriver.chrome.service.Service(ChromeDriverManager().install())
-        generated = get_screenshot_as_png(data_table, driver=webdriver.Chrome(service=service, options=chrome_options))
-
-        generated = self.trim_image(generated)
-        return generated
-
-    def get_puzzles(self, limit: int = None) -> str:
-        if limit is None:
-            return sorted(self.bot.puzzles.keys())
-        else:
-            todays_puzzle = int(self.bot.utils.get_todays_puzzle())
-            puzzles = [str(p) for p in range(todays_puzzle - limit + 1, todays_puzzle + 1)]
-            return puzzles
-
     @commands.guild_only()
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -190,41 +165,41 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
         if '\n' in message.content:
             title = message.content[0:message.content.index('\n')].strip()
             content = message.content[message.content.index('\n') + 1:].strip()
-            if self.bot.utils.is_wordle_submission(title):
-                self.bot.utils.add_entry(int(message.author.id), title, content)
+            if self.utils.is_wordle_submission(title):
+                self.utils.add_entry(int(message.author.id), title, content)
                 await message.add_reaction('✅')
 
     @commands.guild_only()
     @commands.command(name='missing', help='Shows all players missing an entry for a puzzle')
     async def get_missing(self, ctx, *args):
         if len(args) == 0:
-            puzzle_num = self.bot.utils.get_todays_puzzle()
-        elif len(args) == 1 and re.match(r"^\d+$", args[0]):
-            puzzle_num = args[0].strip("# ")
+            puzzle_id = self.puzzles.get_puzzle_by_date(self.utils.get_todays_date())
+        elif len(args) == 1 and re.match(r"^[#]?\d+$", args[0]):
+            puzzle_id = int(args[0].strip("# "))
         else:
-            await ctx.reply("Couldn't understand command. Try `?missing` or `?missing <puzzle #>`")
+            await ctx.reply("Couldn't understand command. Try `?help missing`")
             return
-        missing_ids = [str(player.user_id) for player in self.bot.players.values() if puzzle_num not in player.get_puzzles()]
+        missing_ids = [str(user_id) for user_id in self.players.get_ids() if puzzle_id not in self.players.get(user_id).get_ids()]
         if len(missing_ids) == 0:
-            await ctx.reply(f"All known players have submitted Puzzle #{puzzle_num}!")
+            await ctx.reply(f"All known players have submitted Puzzle #{puzzle_id}!")
         else:
-            await ctx.reply("The following players are missing Puzzle #{}: <@{}>".format(puzzle_num, '>, <@'.join(missing_ids)))
+            await ctx.reply("The following players are missing Puzzle #{}: <@{}>".format(puzzle_id, '>, <@'.join(missing_ids)))
 
     @commands.guild_only()
     @commands.command(name='entries', help='Shows all recorded entries for a player')
     async def get_entries(self, ctx, *args):
         if len(args) == 0:
-            query_id = ctx.author.id
-        elif len(args) == 1 and self.bot.utils.is_user(args[0]):
+            query_id = int(ctx.author.id)
+        elif len(args) == 1 and self.utils.is_user(args[0]):
             query_id = int(args[0].strip("<@!> "))
         else:
-            await ctx.reply("Couldn't understand command. Try `?entries` or `?entries <user>`.")
+            await ctx.reply("Couldn't understand command. Try `?help entries`.")
             return
 
-        if query_id in self.bot.players.keys():
-            player = self.bot.players[query_id]
-            found_puzzles = player.get_puzzles()
-            await ctx.reply(f"{len(found_puzzles)} games found: {', '.join(found_puzzles)}. Use `?view <puzzle #>` to see details of a submission.")
+        if query_id in self.players.get_ids():
+            player = self.players.get(query_id)
+            found_puzzles = [str(puzzle_id) for puzzle_id in player.get_ids()]
+            await ctx.reply(f"{len(found_puzzles)} entries found:\n#{', #'.join(found_puzzles)}\nUse `?view <puzzle #>` to see details of a submission.")
         else:
             await ctx.reply(f"Couldn't find any recorded entries for <@{query_id}>.")
 
@@ -232,33 +207,35 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     @commands.command(name="view", help="Show player's entry for a given puzzle number")
     async def view_entry(self, ctx, *args):
         if len(args) >= 1:
-            if self.bot.utils.is_user(args[0]):
+            if self.utils.is_user(args[0]):
                 query_id = int(args[0].strip("<@!> "))
                 query_args = args[1:]
             else:
-                query_id = ctx.author.id
+                query_id = int(ctx.author.id)
                 query_args = args
-            puzzle_nums = []
+            puzzle_ids = []
             for arg in query_args:
                 if re.match(r'^[#]?\d+$', arg):
-                    puzzle_nums.append(arg.strip("# "))
+                    puzzle_ids.append(int(arg.strip("# ")))
                 else:
-                    await ctx.reply(f"Couldn't understand command. Try `?view <puzzle #>` or `?view <user> <puzzle #>`.")
+                    await ctx.reply(f"Couldn't understand command. Try `?help view`.")
                     return
         else:
-            await ctx.reply(f"Couldn't understand command. Try `?view <puzzle #>` or `?view <user> <puzzle #>`.")
+            await ctx.reply(f"Couldn't understand command. Try `?help view`.")
             return
 
-        if query_id in self.bot.players.keys():
-            player = self.bot.players[query_id]
+        puzzle_ids.sort()
+
+        if query_id in self.players.get_ids():
+            player = self.players.get(query_id)
             df = pd.DataFrame(columns=['User', 'Puzzle', 'Week', 'Score', '🟩', '🟨', '⬜'])
-            for i, puzzle_num in enumerate(puzzle_nums):
-                if puzzle_num in player.get_puzzles():
-                    entry = player.get_entry(puzzle_num)
-                    df.loc[i] = [self.bot.utils.get_nickname(query_id), f"#{puzzle_num}", entry.week, f"{entry.score}/6", entry.green, entry.yellow, entry.other]
+            for i, puzzle_id in enumerate(puzzle_ids):
+                if puzzle_id in player.get_ids():
+                    entry: PuzzleEntry = player.get_entry(puzzle_id)
+                    df.loc[i] = [self.utils.get_nickname(query_id), f"#{puzzle_id}", entry.week, f"{entry.score}/6", entry.green, entry.yellow, entry.other]
                 else:
-                    df.loc[i] = [self.bot.utils.get_nickname(query_id), f"#{puzzle_num}", "?", "?/6", "?", "?", "?"]
-            entries_img = self.get_table_image(df)
+                    df.loc[i] = [self.utils.get_nickname(query_id), f"#{puzzle_id}", "?", "?/6", "?", "?", "?"]
+            entries_img = self.utils.get_image_from_df(df)
             if entries_img is not None:
                 with io.BytesIO() as image_binary:
                     entries_img.save(image_binary, 'PNG')
@@ -275,19 +252,19 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     async def get_stats(self, ctx, *args):
         missing_users_str = None
         if len(args) == 0:
-            query_ids = [ctx.author.id]
+            query_ids = [int(ctx.author.id)]
         else:
             query_ids = []
             unknown_ids = []
             for arg in args:
-                if self.bot.utils.is_user(arg):
+                if self.utils.is_user(arg):
                     user_id = int(arg.strip("<@!> "))
-                    if user_id in self.bot.players.keys():
+                    if user_id in self.players.get_ids():
                         query_ids.append(user_id)
                     else:
                         unknown_ids.append(str(user_id))
                 else:
-                    await ctx.reply("Couldn't understand command. Try `?stats` or `?stats <user>`.")
+                    await ctx.reply("Couldn't understand command. Try `?help <stats>`.")
                     return
             if len(unknown_ids) > 0:
                 if len(query_ids) > 0:
@@ -296,19 +273,19 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     await ctx.reply(f"Couldn't find user(s): <@{'>, <@'.join(unknown_ids)}>")
                     return
 
-        df = pd.DataFrame(columns=['User', 'Puzzles', 'Missed', 'Avg Score', 'Avg 🟩', 'Avg 🟨', 'Avg ⬜'])
+        df = pd.DataFrame(columns=['User', 'Avg Score', 'Avg 🟩', 'Avg 🟨', 'Avg ⬜', '🧩', '🚫'])
         for i, query_id in enumerate(query_ids):
-            player = self.bot.players[query_id]
+            player = self.players.get(query_id)
             df.loc[i] = [
-                self.bot.utils.get_nickname(query_id),
-                len(player.get_puzzles()),
-                len(self.bot.puzzles.keys()) - len(player.get_puzzles()),
-                "{:.4f}".format(stats.mean([e.score for e in player.entries.values()])),
-                "{:.4f}".format(stats.mean([e.green for e in player.entries.values()])),
-                "{:.4f}".format(stats.mean([e.yellow for e in player.entries.values()])),
-                "{:.4f}".format(stats.mean([e.other for e in player.entries.values()])),
+                self.utils.get_nickname(query_id),
+                "{:.4f}".format(stats.mean([e.score for e in player.get_entries()])),
+                "{:.4f}".format(stats.mean([e.green for e in player.get_entries()])),
+                "{:.4f}".format(stats.mean([e.yellow for e in player.get_entries()])),
+                "{:.4f}".format(stats.mean([e.other for e in player.get_entries()])),
+                len(player.get_ids()),
+                len(self.puzzles.get_ids()) - len(player.get_ids()),
             ]
-        stats_img = self.get_table_image(df)
+        stats_img = self.utils.get_image_from_df(df)
         if stats_img is not None:
             with io.BytesIO() as image_binary:
                 stats_img.save(image_binary, 'PNG')
@@ -321,13 +298,51 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             await ctx.reply("Sorry, an error occurred while trying to fetch stats.")
 
     @commands.guild_only()
-    @commands.command()
+    @commands.command(name="help")
     async def help(self, ctx, *args):
         if len(args) == 0:
-            await ctx.reply("All commands: {}".format(', '.join([str(c) for c in self.bot.commands])))
-        else:
-            for c in self.bot.commands:
-                print(self.bot.all_commands[c])
+            await ctx.reply("Member commands: ?ranks, ?missing, ?entries, ?stats, & ?view\nOwner commands: ?save, ?add, & ?remove\nTry `?help <command>` for more information.")
+        elif len(args) == 1:
+            command = args[0].strip()
+            explanation = ""
+            usage = ""
+            notes = None
+            if command == 'ranks':
+                explanation = "View the leaderboard over time or for a specific puzzle."
+                usage = "`?ranks (today|weekly|10-day|all-time)`\n`?ranks <MM/DD/YYYY>`\n`?ranks <puzzle #>`"
+                notes = "- `?ranks` will default to `?ranks weekly`.\n- When using MM/DD/YYYY format, the date must be a Sunday."
+            elif command == 'missing':
+                explanation = "View and mention all players who have not yet submitted a puzzle."
+                usage = "`?missing [<puzzle #>]`"
+                notes = "`?missing` will default to today's puzzle."
+            elif command == 'entries':
+                explanation = "View a list of all submitted entries for a player."
+                usage = "`?entries [<player>]`"
+            elif command == 'stats':
+                explanation = "View more details stats on one or players."
+                usage = "`?stats <player1> [<player2> ...]`"
+                notes = "`?stats` will default to just query for the calling user."
+            elif command == 'view':
+                explanation = "View specific details of one or more entries."
+                usage = "`?view [<player>] <puzzle #1> [<puzzle #2> ...]`"
+            elif command == 'save':
+                explanation = "Manually save to the database (debug usage only)."
+                usage = "`?save`"
+            elif command == 'add':
+                explanation = "Manually add an entry to the database."
+                usage = "`?add [<player>] <entry>`"
+            elif command == 'remove':
+                explanation = "Remove an entry from the database."
+                usage = "`?remove [<player>] <puzzle #>`"
+            else:
+                await ctx.reply("Could not understand command. Try `?help`.")
+                return
+
+            if notes is None:
+                await ctx.reply(f"**?{command}**\n{explanation}\n**Usage**\n{usage}")
+            else:
+                await ctx.reply(f"**?{command}**\n{explanation}\n**Usage**\n{usage}\n**Notes**\n{notes}")
+
 
 def setup(bot):
     bot.add_cog(MembersCog(bot))
