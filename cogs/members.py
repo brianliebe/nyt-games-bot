@@ -166,7 +166,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
             title = message.content[0:message.content.index('\n')].strip()
             content = message.content[message.content.index('\n') + 1:].strip()
             if self.utils.is_wordle_submission(title):
-                self.utils.add_entry(int(message.author.id), title, content)
+                self.db.add_entry(int(message.author.id), title, content)
                 await message.add_reaction('✅')
 
     @commands.guild_only()
