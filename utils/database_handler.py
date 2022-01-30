@@ -20,6 +20,7 @@ class DatabaseHandler():
             puzzle_id, score, _ = re.findall(r'\d+', title)
             score = int(score)
 
+        puzzle_id = int(puzzle_id)
         week_start = self.utils.convert_date_to_str(self.puzzles.get_date_by_puzzle(puzzle_id))
 
         entry = PuzzleEntry(puzzle_id, user_id, week_start,
