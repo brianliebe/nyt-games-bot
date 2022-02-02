@@ -1,9 +1,10 @@
-import re
+import re, io
 from datetime import date, datetime, timedelta, timezone
 from bokeh.io.export import get_screenshot_as_png
 from bokeh.models import ColumnDataSource, DataTable, TableColumn
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
+from PIL import Image
 
 class BotUtilities():
     def __init__(self, client, bot) -> None:
@@ -103,3 +104,63 @@ class BotUtilities():
                         return rgb_image.crop([5, 5, width, y + 8])
 
         return rgb_image
+
+    def fig_to_image(self, fig):
+        buf = io.BytesIO()
+        fig.savefig(buf)
+        buf.seek(0)
+        img = Image.open(buf)
+        return img
+
+    def image_to_binary(self, img):
+        buf = io.BytesIO()
+        img.save(buf, 'PNG')
+        buf.seek(0)
+        return buf
+
+    def combine_images(self, img1, img2):
+        widths, heights = zip(*(i.size for i in [img1, img2]))
+        w = max(widths)
+        h = sum(heights)
+        combo = Image.new('RGBA', (w, h))
+        combo.paste(img1, (0, 0))
+        combo.paste(img2, (0, img1.size[1]))
+        return combo
+
+    def resize_image(self, image: Image.Image, width: int = None, height: int = None):
+        w, h = image.size
+        if width is None and height is None: return image
+        if width is None:
+            r = height / float(h)
+            dim = (int(w * r), height)
+        else:
+            r = width / float(w)
+            dim = (width, int(h * r))
+        try:
+            return image.resize(dim)
+        except Exception as e:
+            print('Caught exception: ' + str(e))
+            return None
+
+    def remove_emojis(self, data):
+        emoj = re.compile("["
+            u"\U0001F600-\U0001F64F"  # emoticons
+            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+            u"\U0001F680-\U0001F6FF"  # transport & map symbols
+            u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+            u"\U00002500-\U00002BEF"  # chinese char
+            u"\U00002702-\U000027B0"
+            u"\U00002702-\U000027B0"
+            u"\U000024C2-\U0001F251"
+            u"\U0001f926-\U0001f937"
+            u"\U00010000-\U0010ffff"
+            u"\u2640-\u2642" 
+            u"\u2600-\u2B55"
+            u"\u200d"
+            u"\u23cf"
+            u"\u23e9"
+            u"\u231a"
+            u"\ufe0f"  # dingbats
+            u"\u3030"
+                        "]+", re.UNICODE)
+        return re.sub(emoj, '', data)

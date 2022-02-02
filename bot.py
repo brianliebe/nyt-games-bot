@@ -4,6 +4,7 @@ from utils.database_handler import DatabaseHandler
 from utils.player_handler import PlayerHandler
 from utils.puzzle_handler import PuzzleHandler
 from utils.bot_utilities import BotUtilities
+from utils.help_handler import HelpMenuHandler
 
 # turn off logging for webdriver manager
 os.environ['WDM_LOG_LEVEL'] = '0'
@@ -21,11 +22,12 @@ activity = discord.Game(name="BOT IS DOWN!") if discord_env == 'DEV' else discor
 
 # set up the bot
 bot = commands.Bot(command_prefix='?', intents=intents, activity=activity, help_command=None)
-bot.guild_id = int(guild_id)
+bot.guild_id = int(guild_id) if guild_id.isnumeric() else -1
 bot.utils = BotUtilities(client, bot)
 bot.puzzles = PuzzleHandler(bot.utils)
 bot.players = PlayerHandler(bot.utils)
 bot.db = DatabaseHandler(bot.puzzles, bot.players, bot.utils)
+bot.help_menu = HelpMenuHandler()
 
 # load the cogs
 if __name__ == '__main__':
