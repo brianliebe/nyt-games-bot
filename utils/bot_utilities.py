@@ -77,14 +77,16 @@ class BotUtilities():
         data_table = DataTable(source=source, columns=columns_for_table, index_position=None, autosize_mode='fit_viewport', reorderable=False)
 
         chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument('--headless')
         chrome_options.add_argument("--window-size=1024,768")
+        chrome_options.add_argument("--remote-debugging-port=9222")
         chrome_options.add_argument('--no-proxy-server')
         chrome_options.add_argument("--proxy-server='direct://'")
         chrome_options.add_argument("--proxy-bypass-list=*")
 
-        service = webdriver.chrome.service.Service(ChromeDriverManager().install())
-        generated = get_screenshot_as_png(data_table, driver=webdriver.Chrome(service=service, options=chrome_options))
+        generated = get_screenshot_as_png(data_table, driver=webdriver.Chrome('/usr/bin/chromedriver', options=chrome_options))
 
         generated = self._trim_image(generated)
         return generated
