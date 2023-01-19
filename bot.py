@@ -1,8 +1,6 @@
 import os, discord
 from discord.ext import commands
 from utils.database_handler import DatabaseHandler
-from utils.player_handler import PlayerHandler
-from utils.puzzle_handler import PuzzleHandler
 from utils.bot_utilities import BotUtilities
 from utils.help_handler import HelpMenuHandler
 
@@ -24,9 +22,7 @@ activity = discord.Game(name="BOT IS DOWN!") if discord_env == 'DEV' else discor
 bot = commands.Bot(command_prefix='?', intents=intents, activity=activity, help_command=None)
 bot.guild_id = int(guild_id) if guild_id.isnumeric() else -1
 bot.utils = BotUtilities(client, bot)
-bot.puzzles = PuzzleHandler(bot.utils)
-bot.players = PlayerHandler(bot.utils)
-bot.db = DatabaseHandler(bot.puzzles, bot.players, bot.utils)
+bot.db = DatabaseHandler(bot.utils)
 bot.help_menu = HelpMenuHandler()
 
 # load the cogs
@@ -41,7 +37,7 @@ if __name__ == '__main__':
 @bot.event
 async def on_ready():
     try:
-        bot.db.load()
+        bot.db.connect()
         print("Database loaded & successfully logged in.")
     except Exception as e:
         print(f"Failed to load database: {e}")

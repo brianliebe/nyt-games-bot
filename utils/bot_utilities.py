@@ -13,10 +13,10 @@ class BotUtilities():
 
     # QUERIES
 
-    def get_nickname(self, user_id) -> str:
+    def get_nickname(self, user_id: str) -> str:
         guild = self.bot.get_guild(self.bot.guild_id)
         for member in guild.members:
-            if member.id == user_id:
+            if str(member.id) == str(user_id):
                 return member.display_name
         return "?"
 
