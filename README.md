@@ -31,14 +31,12 @@
 
 ## Notes
 
-This is by no means complete and you might need some tweaking to get this up-and-running on a new server. I continuously am adding to it, so this README might becoming outdated! As of writing, all the commands are guild_only, so this is probably only feasible for my use-case. Would take some minor tweaking of the Cogs to get that changed.
-
-The "database" this bot uses is literally just a .json file that I'm storing the results into, not a real database, so it goes without saying that this is not meant to be used heavily on some massive server.
+This project is not complete and you might need some tweaking to get this up-and-running on a new server. I am currently using a MySQL database to store the entries, but anything would work given enough effort. The database has two tables: `users` (columns `user_id` and `name`) and `entries` (columns `puzzle_id`, `user_id`, `score`, `green`, `yellow`, `other`).
 
 To deploy this yourself, I highly suggest taking a look at [this](https://realpython.com/how-to-make-a-discord-bot-python/) guide.
 
 ## TODO
 
-- Add permissioning so that only specific users may enter scores (and/or only some users may use `?add`)
 - Add permissioning so that only specific channels may be used
-- Add a better database implementation
+- ~Add permissioning so that only specific users may enter scores (and/or only some users may use `?add`)~ Done ✅
+- ~Add a better database implementation~ Done ✅
