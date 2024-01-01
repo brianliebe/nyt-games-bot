@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta, timezone
 from bokeh.io.export import get_screenshot_as_png
 from bokeh.models import ColumnDataSource, DataTable, TableColumn
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from PIL import Image
 
@@ -74,20 +75,17 @@ class BotUtilities():
         for column in df_columns:
             columns_for_table.append(TableColumn(field=column, title=column))
 
-        data_table = DataTable(source=source, columns=columns_for_table, index_position=None, autosize_mode='fit_viewport', reorderable=False)
+        data_table = DataTable(source=source, columns=columns_for_table, index_position=None, reorderable=False)
 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument('--headless')
-        chrome_options.add_argument("--window-size=1024,768")
-        chrome_options.add_argument("--remote-debugging-port=9222")
-        chrome_options.add_argument('--no-proxy-server')
-        chrome_options.add_argument("--proxy-server='direct://'")
-        chrome_options.add_argument("--proxy-bypass-list=*")
 
-        generated = get_screenshot_as_png(data_table, driver=webdriver.Chrome('/usr/bin/chromedriver', options=chrome_options))
+        service = Service(executable_path='/usr/bin/chromedriver')
+        driver = webdriver.Chrome(service=service, options=chrome_options)
 
+        generated = get_screenshot_as_png(data_table, driver=driver)
         generated = self._trim_image(generated)
         return generated
 

@@ -1,4 +1,4 @@
-import os, discord
+import os, discord, asyncio
 from discord.ext import commands
 from utils.database_handler import DatabaseHandler
 from utils.bot_utilities import BotUtilities
@@ -13,7 +13,7 @@ discord_env = os.getenv('DISCORD_ENV')
 guild_id = os.getenv('GUILD_ID')
 
 # build Discord client
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.members = True
 client = discord.Client(intents=intents)
 activity = discord.Game(name="BOT IS DOWN!") if discord_env == 'DEV' else discord.Game(name="?help")
@@ -26,12 +26,15 @@ bot.db = DatabaseHandler(bot.utils)
 bot.help_menu = HelpMenuHandler()
 
 # load the cogs
-if __name__ == '__main__':
-    for extension in ['cogs.members', 'cogs.owner']:
-        try:
-            bot.load_extension(extension)
-        except Exception as e:
-            print(f"Failed to load extension '{extension}'.\n{e}")
+#if __name__ == '__main__':
+async def main():
+    async with bot:
+        for extension in ['cogs.members', 'cogs.owner']:
+            try:
+                await bot.load_extension(extension)
+            except Exception as e:
+                print(f"Failed to load extension '{extension}'.\n{e}")
+        await bot.start(token, reconnect=True)
 
 # load the database when ready
 @bot.event
@@ -43,4 +46,4 @@ async def on_ready():
         print(f"Failed to load database: {e}")
 
 # run the bot
-bot.run(token, bot=True, reconnect=True)
+asyncio.run(main())

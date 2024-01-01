@@ -201,7 +201,10 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
 
         if user_id in self.db.get_all_players():
             found_puzzles = [str(p_id) for p_id in self.db.get_puzzles_by_player(user_id)]
-            await ctx.reply(f"{len(found_puzzles)} entries found:\n#{', #'.join(found_puzzles)}\nUse `?view <puzzle #>` to see details of a submission.")
+            if len(found_puzzles) < 50:
+                await ctx.reply(f"{len(found_puzzles)} entries found:\n#{', #'.join(found_puzzles)}\nUse `?view <puzzle #>` to see details of a submission.")
+            else:
+                await ctx.reply(f"{len(found_puzzles)} entries found, too many to display. First 10 and last 10:\n#{', #'.join(found_puzzles[:10])} ... #{', #'.join(found_puzzles[-10:])}\nUse `?view <puzzle #>` to see details of a submission.")
         else:
             await ctx.reply(f"Couldn't find any recorded entries for <@{user_id}>.")
 
@@ -305,6 +308,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 len(puzzle_list),
                 len(self.db.get_all_puzzles()) - len(puzzle_list),
             ]
+
         stats_img = self.utils.get_image_from_df(df)
 
         hist_img = None
@@ -382,5 +386,5 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 usage = "`?remove [<player>] <puzzle #>`", \
                 owner_only=True)
 
-def setup(bot: commands.Bot):
-    bot.add_cog(MembersCog(bot))
+async def setup(bot: commands.Bot):
+    await bot.add_cog(MembersCog(bot))

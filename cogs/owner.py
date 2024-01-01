@@ -55,6 +55,5 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
         else:
             await ctx.reply("To manually add a Wordle score, please use `?add <user> <Wordle output>` (specifying a user is optional).")
 
-
-def setup(bot):
-    bot.add_cog(OwnerCog(bot))
+async def setup(bot):
+    await bot.add_cog(OwnerCog(bot))
