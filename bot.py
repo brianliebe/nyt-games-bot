@@ -26,7 +26,6 @@ bot.db = DatabaseHandler(bot.utils)
 bot.help_menu = HelpMenuHandler()
 
 # load the cogs
-#if __name__ == '__main__':
 async def main():
     async with bot:
         for extension in ['cogs.members', 'cogs.owner']:

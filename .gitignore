@@ -132,6 +132,3 @@ dmypy.json
 geckodriver*
 .DS_Store
 
-bin/
-lib64
-pyvenv.cfg
