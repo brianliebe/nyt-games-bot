@@ -21,9 +21,9 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
     async def remove_entry(self, ctx: commands.Context, *args: str) -> None:
         match self.utils.get_game_from_channel(ctx.message):
             case NYTGame.WORDLE:
-                await self.remove_entry_wordle(ctx, args)
+                await self.remove_entry_wordle(ctx, *args)
             case NYTGame.CONNECTIONS:
-                await self.remove_entry_connections(ctx, args)
+                await self.remove_entry_connections(ctx, *args)
             case NYTGame.UNKNOWN:
                 print(f"[REMOVE] Unsure of game mode, skipping response to: '{args}'")
 
@@ -33,9 +33,9 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
     async def add_score(self, ctx: commands.Context, *args: str) -> None:
         match self.utils.get_game_from_channel(ctx.message):
             case NYTGame.WORDLE:
-                await self.add_score_wordle(ctx, args)
+                await self.add_score_wordle(ctx, *args)
             case NYTGame.CONNECTIONS:
-                await self.add_score_connections(ctx, args)
+                await self.add_score_connections(ctx, *args)
             case NYTGame.UNKNOWN:
                 print(f"[ADD] Unsure of game mode, skipping response to: '{args}'")
 
