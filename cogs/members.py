@@ -1,4 +1,4 @@
-import discord, re, io
+import discord, re, io, traceback
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -38,20 +38,24 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     @commands.guild_only()
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        if message.author.id != self.bot.user.id and message.content.count("\n") >= 2:
-            # parse non-puzzle lines from message
-            user_id = str(message.author.id)
-            first_line = message.content.splitlines()[0].strip()
-            first_two_lines = '\n'.join(message.content.splitlines[:2])
-            # add entry to either Wordle or Connections
-            if 'Wordle' in first_line and self.utils.is_wordle_submission(first_line):
-                content = '\n'.join(message.content.splitlines()[1:])
-                self.wordle_db.add_entry(user_id, first_line, content)
-                await message.add_reaction('✅')
-            elif 'Connections' in first_line and self.utils.is_connections_submission(first_two_lines):
-                content = '\n'.join(message.content.splitlines()[2:])
-                self.conns_db.add_entry(user_id, first_two_lines, content)
-                await message.add_reaction('✅')
+        try:
+            if message.author.id != self.bot.user.id and message.content.count("\n") >= 2:
+                # parse non-puzzle lines from message
+                user_id = str(message.author.id)
+                first_line = message.content.splitlines()[0].strip()
+                first_two_lines = '\n'.join(message.content.splitlines()[:2])
+                # add entry to either Wordle or Connections
+                if 'Wordle' in first_line and self.utils.is_wordle_submission(first_line):
+                    content = '\n'.join(message.content.splitlines()[1:])
+                    self.wordle_db.add_entry(user_id, first_line, content)
+                    await message.add_reaction('✅')
+                elif 'Connections' in first_line and self.utils.is_connections_submission(first_two_lines):
+                    content = '\n'.join(message.content.splitlines()[2:])
+                    self.conns_db.add_entry(user_id, first_two_lines, content)
+                    await message.add_reaction('✅')
+        except Exception as e:
+            print(f"ERROR: {e}")
+            traceback.print_exception(e)
 
     @commands.guild_only()
     @commands.command(name="help")

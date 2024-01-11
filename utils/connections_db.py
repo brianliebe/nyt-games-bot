@@ -24,9 +24,13 @@ class ConnectionsDatabaseHandler(DatabaseHandler):
     ####################
 
     def add_entry(self, user_id: str, title: str, puzzle: str) -> bool:
-        puzzle_id_title, _ = re.findall(r'\d+', title)
+        puzzle_id_title = re.findall(r'\d+', title)
         score = len(puzzle.split('\n'))
-        puzzle_id = int(puzzle_id_title)
+
+        if puzzle_id_title:
+            puzzle_id = int(puzzle_id_title[0])
+        else:
+            return
 
         if not self._db.is_connected():
             self.connect()
