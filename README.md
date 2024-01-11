@@ -1,10 +1,10 @@
-# Wordle Discord Bot 🤖
+# NYT Games Discord Bot 🤖
 
-### A little Discord bot that tracks users' Wordle scores and maintains a leaderboard.
+### A little Discord bot that tracks users' Wordle and Connections scores and maintains a leaderboard.
 
-Track the daily, weekly, and all-time leaderboards for your server, plus get some additional stats on how well you've played. Just copy & paste your Wordle results into Discord chat and the bot will track it.
+Track the daily, weekly, and all-time leaderboards for your server, plus get some additional stats on how well you've played. Just copy & paste your game results into Discord chat and the bot will track it.
 
-### 🟩 🟨 ⬜
+### 🟩 🟨 ⬜ / 🟨 🟩 🟦 🟪
 
 ## Commands
 - `?ranks (today|week|all-time|<puzzle #>)`
@@ -24,6 +24,8 @@ Track the daily, weekly, and all-time leaderboards for your server, plus get som
 1. Adding a score normally (without `?add`):
 
 ![image](https://user-images.githubusercontent.com/25470007/213812178-79617256-3a1f-4968-b311-1f111181ac32.png)
+<img width="195" alt="image" src="https://github.com/brianliebe/nyt-games-bot/assets/25470007/066219c6-75da-477e-8f97-439dc34196e7">
+
 
 2. Viewing the leaderboard with `?ranks`:
 
@@ -47,12 +49,4 @@ Track the daily, weekly, and all-time leaderboards for your server, plus get som
 
 ## Notes
 
-This project is not complete and you might need some tweaking to get this up-and-running on a new server. I am currently using a MySQL database to store the entries, but anything would work given enough effort. The database has two tables: `users` (columns `user_id` and `name`) and `entries` (columns `puzzle_id`, `user_id`, `score`, `green`, `yellow`, `other`).
-
-To deploy this yourself, I highly suggest taking a look at [this](https://realpython.com/how-to-make-a-discord-bot-python/) guide.
-
-## TODO
-
-- Add permissioning so that only specific channels may be used
-- ~Add permissioning so that only specific users may enter scores (and/or only some users may use `?add`)~ Done ✅
-- ~Add a better database implementation~ Done ✅
+This project is not complete and you might need some tweaking to get this up-and-running on a new server. To deploy this yourself, I highly suggest taking a look at [this](https://realpython.com/how-to-make-a-discord-bot-python/) guide.
