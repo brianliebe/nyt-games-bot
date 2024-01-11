@@ -1,16 +1,34 @@
-import re, io
-from datetime import date, datetime, timedelta, timezone
+import re, io, discord
+import matplotlib.pyplot as plt
 from bokeh.io.export import get_screenshot_as_png
 from bokeh.models import ColumnDataSource, DataTable, TableColumn
+from enum import Enum, auto
+from datetime import date, datetime, timedelta, timezone
+from discord.ext import commands
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from PIL import Image
+
+class NYTGame(Enum):
+    WORDLE = auto()
+    CONNECTIONS = auto()
+    UNKNOWN = auto()
 
 class BotUtilities():
-    def __init__(self, client, bot) -> None:
-        self.client = client
-        self.bot = bot
+    def __init__(self, client: discord.Client, bot: commands.Bot) -> None:
+        self.client: discord.Client = client
+        self.bot: commands.Bot = bot
+
+    # GAME TYPE
+
+    def get_game_from_channel(self, message: discord.Message) -> NYTGame:
+        channel_name: str = message.channel.name.lower()
+        if 'wordle' in channel_name:
+            return NYTGame.WORDLE
+        elif 'connections' in channel_name:
+            return NYTGame.CONNECTIONS
+        else:
+            return NYTGame.UNKNOWN
 
     # QUERIES
 
@@ -28,15 +46,18 @@ class BotUtilities():
 
     def is_date(self, date_str: str) -> bool:
         return re.match(r'^\d{1,2}/\d{1,2}(/\d{2}(?:\d{2})?)?$', date_str)
-        
+
     def is_sunday(self, query_date: date) -> bool:
         if query_date is not None and type(query_date) is date:
             return query_date.strftime('%A') == 'Sunday'
         else:
             return False
 
-    def is_wordle_submission(self, title: str) -> str:
-        return re.match(r'^Wordle \d{3} \d{1}/\d{1}$', title) or re.match(r'^Wordle \d{3} X/\d{1}$', title)
+    def is_wordle_submission(self, line: str) -> str:
+        return re.match(r'^Wordle \d+ \d{1}/\d{1}$', line) or re.match(r'^Wordle \d+ X/\d{1}$', line)
+
+    def is_connections_submission(self, lines: str) -> str:
+        return re.match(r'^Connections *(\n)Puzzle( #)*\d+( )*$', lines)
 
     # DATES/TIMES
 
@@ -59,7 +80,7 @@ class BotUtilities():
             return datetime.strptime(date_str, f'%m/%d/%Y').date()
         else:
             return None
-        
+
     # CONVERT
 
     def convert_date_to_str(self, query_date: date) -> str:
@@ -67,7 +88,7 @@ class BotUtilities():
 
     # DATA FRAME TO IMAGE
 
-    def get_image_from_df(self, df):
+    def get_image_from_df(self, df) -> Image.Image:
         source = ColumnDataSource(df)
 
         df_columns = df.columns.values
@@ -85,12 +106,12 @@ class BotUtilities():
         service = Service(executable_path='/usr/bin/chromedriver')
         driver = webdriver.Chrome(service=service, options=chrome_options)
 
-        generated = get_screenshot_as_png(data_table, driver=driver)
-        generated = self._trim_image(generated)
-        return generated
+        generated: Image.Image = get_screenshot_as_png(data_table, driver=driver)
+        return self._trim_image(generated)
 
-    def _trim_image(self, image):
-        if image is None: return None
+    def _trim_image(self, image: Image.Image) -> Image.Image:
+        if image is None:
+            return None
         rgb_image = image.convert('RGB')
         width, height = image.size
         for y in reversed(range(height)):
@@ -105,20 +126,20 @@ class BotUtilities():
 
         return rgb_image
 
-    def fig_to_image(self, fig):
+    def fig_to_image(self, fig: plt.Figure) -> Image.Image:
         buf = io.BytesIO()
         fig.savefig(buf)
         buf.seek(0)
         img = Image.open(buf)
         return img
 
-    def image_to_binary(self, img):
+    def image_to_binary(self, img: Image.Image) -> io.BytesIO:
         buf = io.BytesIO()
         img.save(buf, 'PNG')
         buf.seek(0)
         return buf
 
-    def combine_images(self, img1, img2):
+    def combine_images(self, img1: Image.Image, img2: Image.Image) -> Image.Image:
         widths, heights = zip(*(i.size for i in [img1, img2]))
         w = max(widths)
         h = sum(heights)
@@ -127,9 +148,10 @@ class BotUtilities():
         combo.paste(img2, (0, img1.size[1]))
         return combo
 
-    def resize_image(self, image: Image.Image, width: int = None, height: int = None):
+    def resize_image(self, image: Image.Image, width: int = None, height: int = None) -> Image.Image:
         w, h = image.size
-        if width is None and height is None: return image
+        if width is None and height is None:
+            return image
         if width is None:
             r = height / float(h)
             dim = (int(w * r), height)
@@ -142,7 +164,7 @@ class BotUtilities():
             print('Caught exception: ' + str(e))
             return None
 
-    def remove_emojis(self, data):
+    def remove_emojis(self, data: str) -> str:
         emoj = re.compile("["
             u"\U0001F600-\U0001F64F"  # emoticons
             u"\U0001F300-\U0001F5FF"  # symbols & pictographs
@@ -154,7 +176,7 @@ class BotUtilities():
             u"\U000024C2-\U0001F251"
             u"\U0001f926-\U0001f937"
             u"\U00010000-\U0010ffff"
-            u"\u2640-\u2642" 
+            u"\u2640-\u2642"
             u"\u2600-\u2B55"
             u"\u200d"
             u"\u23cf"

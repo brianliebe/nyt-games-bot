@@ -1,6 +1,7 @@
 import os, discord, asyncio
 from discord.ext import commands
-from utils.database_handler import DatabaseHandler
+from utils.connections_db import ConnectionsDatabaseHandler
+from utils.wordle_db import WordleDatabaseHandler
 from utils.bot_utilities import BotUtilities
 from utils.help_handler import HelpMenuHandler
 
@@ -16,13 +17,14 @@ guild_id = os.getenv('GUILD_ID')
 intents = discord.Intents.all()
 intents.members = True
 client = discord.Client(intents=intents)
-activity = discord.Game(name="BOT IS DOWN!") if discord_env == 'DEV' else discord.Game(name="?help")
+activity = discord.Game(name="?help")
 
 # set up the bot
 bot = commands.Bot(command_prefix='?', intents=intents, activity=activity, help_command=None)
 bot.guild_id = int(guild_id) if guild_id.isnumeric() else -1
 bot.utils = BotUtilities(client, bot)
-bot.db = DatabaseHandler(bot.utils)
+bot.wordle_db = WordleDatabaseHandler(bot.utils)
+bot.conns_db = ConnectionsDatabaseHandler(bot.utils)
 bot.help_menu = HelpMenuHandler()
 
 # load the cogs
@@ -39,7 +41,8 @@ async def main():
 @bot.event
 async def on_ready():
     try:
-        bot.db.connect()
+        bot.wordle_db.connect()
+        bot.conns_db.connect()
         print("Database loaded & successfully logged in.")
     except Exception as e:
         print(f"Failed to load database: {e}")

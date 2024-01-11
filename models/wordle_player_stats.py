@@ -1,14 +1,13 @@
 import statistics as stats
-from utils.database_handler import DatabaseHandler
-from utils.puzzle_entry import PuzzleEntry
+from models.wordle_entry import WordlePuzzleEntry
+from utils.wordle_db import WordleDatabaseHandler
 
-class PlayerStats():
-    def __init__(self, user_id: str, puzzle_list: list[int], db: DatabaseHandler) -> None:
+class WordlePlayerStats():
+    def __init__(self, user_id: str, puzzle_list: list[int], db: WordleDatabaseHandler) -> None:
         self.user_id = user_id
-        self._db = db
 
-        player_puzzles = self._db.get_puzzles_by_player(self.user_id)
-        player_entries: list[PuzzleEntry] = self._db.get_entries_by_player(self.user_id, puzzle_list)
+        player_puzzles = db.get_puzzles_by_player(self.user_id)
+        player_entries: list[WordlePuzzleEntry] = db.get_entries_by_player(self.user_id, puzzle_list)
 
         self.missed_games = len([p for p in puzzle_list if p not in player_puzzles])
 

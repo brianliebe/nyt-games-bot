@@ -1,4 +1,3 @@
-
 class HelpMenuHandler():
     def __init__(self) -> None:
         self._commands = {}
