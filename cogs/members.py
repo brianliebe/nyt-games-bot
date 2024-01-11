@@ -413,12 +413,12 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
 
             df = pd.DataFrame(columns=['Player', 'Score', 'Count'])
             for i, user_id in enumerate(user_ids):
-                score_counts = [0, 0, 0, 0, 0, 0, 0]
+                score_counts = [0] * len(valid_scores)
                 entries: list[WordlePuzzleEntry] = self.wordle_db.get_entries_by_player(user_id)
                 for score in [entry.score for entry in entries]:
                     score_counts[score - 1] += 1
                 for j in range(0, len(valid_scores)):
-                    df.loc[i*7 + j] = [
+                    df.loc[i*len(valid_scores) + j] = [
                         self.utils.remove_emojis(self.utils.get_nickname(user_id)),
                         valid_scores[j],
                         score_counts[j]
@@ -696,7 +696,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
 
             df = pd.DataFrame(columns=['Player', 'Score', 'Count'])
             for i, user_id in enumerate(user_ids):
-                score_counts = 0 * len(valid_scores)
+                score_counts = [0] * len(valid_scores)
                 entries: list[ConnectionsPuzzleEntry] = self.conns_db.get_entries_by_player(user_id)
                 for score in [entry.score for entry in entries]:
                     score_counts[score - 1] += 1
