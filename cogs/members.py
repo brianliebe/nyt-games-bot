@@ -54,7 +54,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     self.conns_db.add_entry(user_id, first_two_lines, content)
                     await message.add_reaction('✅')
         except Exception as e:
-            print(f"ERROR: {e}")
+            print(f"Caught exception: {e}")
             traceback.print_exception(e)
 
     @commands.guild_only()
@@ -70,24 +70,32 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     @commands.guild_only()
     @commands.command(name='ranks', help='Show ranks of players in the server')
     async def get_ranks(self, ctx: commands.Context, *args: str) -> None:
-        match self.utils.get_game_from_channel(ctx.message):
-            case NYTGame.WORDLE:
-                await self.get_ranks_wordle(ctx, *args)
-            case NYTGame.CONNECTIONS:
-                await self.get_ranks_connections(ctx, *args)
-            case NYTGame.UNKNOWN:
-                print(f"[RANKS] Unsure of game mode, skipping response to: '{args}'")
+        try:
+            match self.utils.get_game_from_channel(ctx.message):
+                case NYTGame.WORDLE:
+                    await self.get_ranks_wordle(ctx, *args)
+                case NYTGame.CONNECTIONS:
+                    await self.get_ranks_connections(ctx, *args)
+                case NYTGame.UNKNOWN:
+                    print(f"[RANKS] Unsure of game mode, skipping response to: '{args}'")
+        except Exception as e:
+            print(f"Caught exception: {e}")
+            traceback.print_exception(e)
 
     @commands.guild_only()
     @commands.command(name='missing', help='Show all players missing an entry for a puzzle')
     async def get_missing(self, ctx: commands.Context, *args: str) -> None:
-        match self.utils.get_game_from_channel(ctx.message):
-            case NYTGame.WORDLE:
-                await self.get_missing_wordle(ctx, *args)
-            case NYTGame.CONNECTIONS:
-                await self.get_missing_connections(ctx, *args)
-            case NYTGame.UNKNOWN:
-                print(f"[MISSING] Unsure of game mode, skipping response to: '{args}'")
+        try:
+            match self.utils.get_game_from_channel(ctx.message):
+                case NYTGame.WORDLE:
+                    await self.get_missing_wordle(ctx, *args)
+                case NYTGame.CONNECTIONS:
+                    await self.get_missing_connections(ctx, *args)
+                case NYTGame.UNKNOWN:
+                    print(f"[MISSING] Unsure of game mode, skipping response to: '{args}'")
+        except Exception as e:
+            print(f"Caught exception: {e}")
+            traceback.print_exception(e)
 
     @commands.guild_only()
     @commands.command(name='entries', help='Show all recorded entries for a player')
@@ -101,29 +109,38 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 case NYTGame.UNKNOWN:
                     print(f"[ENTRIES] Unsure of game mode, skipping response to: '{args}'")
         except Exception as e:
-            print(f"ERROR: {e}")
+            print(f"Caught exception: {e}")
+            traceback.print_exception(e)
 
     @commands.guild_only()
     @commands.command(name="view", help="Show player's entry for a given puzzle number")
     async def get_entry(self, ctx: commands.Context, *args: str) -> None:
-        match self.utils.get_game_from_channel(ctx.message):
-            case NYTGame.WORDLE:
-                await self.get_entry_wordle(ctx, *args)
-            case NYTGame.CONNECTIONS:
-                await self.get_entry_connections(ctx, *args)
-            case NYTGame.UNKNOWN:
-                print(f"[ENTRY] Unsure of game mode, skipping response to: '{args}'")
+        try:
+            match self.utils.get_game_from_channel(ctx.message):
+                case NYTGame.WORDLE:
+                    await self.get_entry_wordle(ctx, *args)
+                case NYTGame.CONNECTIONS:
+                    await self.get_entry_connections(ctx, *args)
+                case NYTGame.UNKNOWN:
+                    print(f"[ENTRY] Unsure of game mode, skipping response to: '{args}'")
+        except Exception as e:
+            print(f"Caught exception: {e}")
+            traceback.print_exception(e)
 
     @commands.guild_only()
     @commands.command(name="stats", help="Show basic stats for a player")
     async def get_stats(self, ctx: commands.Context, *args: str) -> None:
-        match self.utils.get_game_from_channel(ctx.message):
-            case NYTGame.WORDLE:
-                await self.get_stats_wordle(ctx, *args)
-            case NYTGame.CONNECTIONS:
-                await self.get_stats_connections(ctx, *args)
-            case NYTGame.UNKNOWN:
-                print(f"[STATS] Unsure of game mode, skipping response to: '{args}'")
+        try:
+            match self.utils.get_game_from_channel(ctx.message):
+                case NYTGame.WORDLE:
+                    await self.get_stats_wordle(ctx, *args)
+                case NYTGame.CONNECTIONS:
+                    await self.get_stats_connections(ctx, *args)
+                case NYTGame.UNKNOWN:
+                    print(f"[STATS] Unsure of game mode, skipping response to: '{args}'")
+        except Exception as e:
+            print(f"Caught exception: {e}")
+            traceback.print_exception(e)
 
     ######################
     #   WORDLE METHODS   #
