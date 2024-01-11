@@ -24,8 +24,6 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
                 await self.remove_entry_wordle(ctx, *args)
             case NYTGame.CONNECTIONS:
                 await self.remove_entry_connections(ctx, *args)
-            case NYTGame.UNKNOWN:
-                print(f"[REMOVE] Unsure of game mode, skipping response to: '{args}'")
 
 
     @commands.is_owner()
@@ -36,8 +34,6 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
                 await self.add_score_wordle(ctx, *args)
             case NYTGame.CONNECTIONS:
                 await self.add_score_connections(ctx, *args)
-            case NYTGame.UNKNOWN:
-                print(f"[ADD] Unsure of game mode, skipping response to: '{args}'")
 
     ######################
     #   WORDLE METHODS   #
@@ -61,7 +57,6 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
             if self.wordle_db.remove_entry(user_id, puzzle_id):
                 await ctx.message.add_reaction('✅')
             else:
-                print("ERROR: Puzzle entry removal failed!")
                 await ctx.message.add_reaction('❌')
         else:
             await ctx.reply(f"Could not find entry for Puzzle #{puzzle_id} for user <@{user_id}>.")
@@ -104,7 +99,6 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
             if self.conns_db.remove_entry(user_id, puzzle_id):
                 await ctx.message.add_reaction('✅')
             else:
-                print("ERROR: Puzzle entry removal failed!")
                 await ctx.message.add_reaction('❌')
         else:
             await ctx.reply(f"Could not find entry for Puzzle #{puzzle_id} for user <@{user_id}>.")

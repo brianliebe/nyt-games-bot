@@ -76,8 +76,6 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     await self.get_ranks_wordle(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.get_ranks_connections(ctx, *args)
-                case NYTGame.UNKNOWN:
-                    print(f"[RANKS] Unsure of game mode, skipping response to: '{args}'")
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -91,8 +89,6 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     await self.get_missing_wordle(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.get_missing_connections(ctx, *args)
-                case NYTGame.UNKNOWN:
-                    print(f"[MISSING] Unsure of game mode, skipping response to: '{args}'")
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -106,8 +102,6 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     await self.get_entries_wordle(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.get_entries_connections(ctx, *args)
-                case NYTGame.UNKNOWN:
-                    print(f"[ENTRIES] Unsure of game mode, skipping response to: '{args}'")
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -121,8 +115,6 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     await self.get_entry_wordle(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.get_entry_connections(ctx, *args)
-                case NYTGame.UNKNOWN:
-                    print(f"[ENTRY] Unsure of game mode, skipping response to: '{args}'")
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -136,8 +128,6 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     await self.get_stats_wordle(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.get_stats_connections(ctx, *args)
-                case NYTGame.UNKNOWN:
-                    print(f"[STATS] Unsure of game mode, skipping response to: '{args}'")
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -301,7 +291,9 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
 
         if user_id in self.wordle_db.get_all_players():
             found_puzzles = [str(p_id) for p_id in self.wordle_db.get_puzzles_by_player(user_id)]
-            if len(found_puzzles) < 50:
+            if len(found_puzzles) == 0:
+                await ctx.reply(f"Couldn't find any recorded entries for <@{user_id}>.")
+            elif len(found_puzzles) < 50:
                 await ctx.reply(f"{len(found_puzzles)} entries found:\n#{', #'.join(found_puzzles)}\nUse `?view <puzzle #>` to see details of a submission.")
             else:
                 await ctx.reply(f"{len(found_puzzles)} entries found, too many to display. First 10 and last 10:\n#{', #'.join(found_puzzles[:10])} ... #{', #'.join(found_puzzles[-10:])}\nUse `?view <puzzle #>` to see details of a submission.")
@@ -593,7 +585,9 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
 
         if user_id in self.conns_db.get_all_players():
             found_puzzles = [str(p_id) for p_id in self.conns_db.get_puzzles_by_player(user_id)]
-            if len(found_puzzles) < 50:
+            if len(found_puzzles) == 0:
+                await ctx.reply(f"Couldn't find any recorded entries for <@{user_id}>.")
+            elif len(found_puzzles) < 50:
                 await ctx.reply(f"{len(found_puzzles)} entries found:\n#{', #'.join(found_puzzles)}\nUse `?view <puzzle #>` to see details of a submission.")
             else:
                 await ctx.reply(f"{len(found_puzzles)} entries found, too many to display. First 10 and last 10:\n#{', #'.join(found_puzzles[:10])} ... #{', #'.join(found_puzzles[-10:])}\nUse `?view <puzzle #>` to see details of a submission.")
