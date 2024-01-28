@@ -132,3 +132,4 @@ dmypy.json
 geckodriver*
 .DS_Store
 
+BACKUP/
