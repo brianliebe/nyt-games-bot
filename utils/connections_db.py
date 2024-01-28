@@ -1,5 +1,6 @@
 import re, os
 from datetime import date
+from collections import Counter
 from models.connections_entry import ConnectionsPuzzleEntry
 from utils.bot_utilities import BotUtilities
 from utils.db_handler import DatabaseHandler
@@ -25,7 +26,7 @@ class ConnectionsDatabaseHandler(DatabaseHandler):
 
     def add_entry(self, user_id: str, title: str, puzzle: str) -> bool:
         puzzle_id_title = re.findall(r'\d+', title)
-        score = len(puzzle.split('\n'))
+        score = self.__get_score_from_puzzle(puzzle)
 
         if puzzle_id_title:
             puzzle_id = int(puzzle_id_title[0])
@@ -69,3 +70,14 @@ class ConnectionsDatabaseHandler(DatabaseHandler):
         for row in self._cur.fetchall():
             entries.append(ConnectionsPuzzleEntry(row[0], user_id, row[1], row[2]))
         return entries
+
+    ####################
+    #  HELPER METHODS  #
+    ####################
+
+    def __get_score_from_puzzle(self, puzzle: str) -> int:
+        puzzle_lines = puzzle.split('\n')
+        if len(Counter(puzzle_lines[-1]).keys()) == 1:
+            return len(puzzle_lines)
+        else:
+            return 7
