@@ -80,4 +80,4 @@ class ConnectionsDatabaseHandler(DatabaseHandler):
         if len(Counter(puzzle_lines[-1]).keys()) == 1:
             return len(puzzle_lines)
         else:
-            return 7
+            return 8
