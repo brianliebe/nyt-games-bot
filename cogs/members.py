@@ -328,10 +328,11 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 found_match = False
                 for entry in user_puzzles:
                     if entry.puzzle_id == puzzle_id:
+                        score_str = 'X' if entry.score == 7 else str(entry.score)
                         df.loc[i] = [
                             self.utils.get_nickname(user_id),
                             f"#{puzzle_id}",
-                            f"{entry.score}/6",
+                            f"{score_str}/6",
                             entry.green,
                             entry.yellow,
                             entry.other
@@ -400,7 +401,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
 
         hist_img = None
         if len(user_ids) < 5:
-            valid_scores = ['1/6', '2/6', '3/6', '4/6', '5/6', '6/6', '7/6']
+            valid_scores = ['1/6', '2/6', '3/6', '4/6', '5/6', '6/6', 'X/6']
             plt.rcParams.update({'font.size': 20})
 
             df = pd.DataFrame(columns=['Player', 'Score', 'Count'])
@@ -622,10 +623,11 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 found_match = False
                 for entry in user_puzzles:
                     if entry.puzzle_id == puzzle_id:
+                        score_str = 'X' if entry.score == 8 else str(entry.score)
                         df.loc[i] = [
                             self.utils.get_nickname(user_id),
                             f"#{puzzle_id}",
-                            f"{entry.score}/8",
+                            f"{score_str}/7",
                         ]
                         found_match = True
                         break
@@ -633,7 +635,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     df.loc[i] = [
                         self.utils.get_nickname(user_id),
                         f"#{puzzle_id}",
-                        "?/8",
+                        "?/7",
                     ]
             entries_img = self.utils.get_image_from_df(df)
             if entries_img is not None:
@@ -685,7 +687,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
 
         hist_img = None
         if len(user_ids) < 5:
-            valid_scores = ['1/7', '2/7', '3/7', '4/7', '5/7', '6/7', '7/7', '8/7']
+            valid_scores = ['4/7', '5/7', '6/7', '7/7', 'X/7']
             plt.rcParams.update({'font.size': 20})
 
             df = pd.DataFrame(columns=['Player', 'Score', 'Count'])
@@ -693,7 +695,7 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 score_counts = [0] * len(valid_scores)
                 entries: list[ConnectionsPuzzleEntry] = self.conns_db.get_entries_by_player(user_id)
                 for score in [entry.score for entry in entries]:
-                    score_counts[score - 1] += 1
+                    score_counts[score - 4] += 1
                 for j in range(0, len(valid_scores)):
                     df.loc[i*len(valid_scores) + j] = [
                         self.utils.remove_emojis(self.utils.get_nickname(user_id)),
