@@ -416,7 +416,11 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                         valid_scores[j],
                         score_counts[j]
                     ]
-            sns.catplot(x='Score', y='Count', hue='Player', data=df, kind='bar')
+            g = sns.catplot(x='Score', y='Count', hue='Player', data=df, kind='bar')
+            for ax in g.axes.ravel():
+                for c in ax.containers:
+                    labels = ['%d' % v.get_height() for v in c]
+                    ax.bar_label(c, labels=labels, label_type='edge', fontsize=15)
             fig: plt.Figure = plt.gcf()
             fig.subplots_adjust(bottom=0.2)
             fig.set_size_inches(10, 5)
@@ -702,7 +706,11 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                         valid_scores[j],
                         score_counts[j]
                     ]
-            sns.catplot(x='Score', y='Count', hue='Player', data=df, kind='bar')
+            g = sns.catplot(x='Score', y='Count', hue='Player', data=df, kind='bar')
+            for ax in g.axes.ravel():
+                for c in ax.containers:
+                    labels = ['%d' % v.get_height() for v in c]
+                    ax.bar_label(c, labels=labels, label_type='edge', fontsize=15)
             fig = plt.gcf()
             fig.subplots_adjust(bottom=0.2)
             fig.set_size_inches(10, 5)
