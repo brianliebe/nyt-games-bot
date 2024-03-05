@@ -5,19 +5,25 @@ from utils.bot_utilities import BotUtilities, NYTGame
 from utils.help_handler import HelpMenuHandler
 
 class MembersCog(commands.Cog, name="Normal Members Commands"):
+    # class variables
     bot: commands.Bot
     utils: BotUtilities
-    wordle: BaseCommandHandler
-    connections: BaseCommandHandler
     help_menu: HelpMenuHandler
+
+    # games
+    connections: BaseCommandHandler
+    strands: BaseCommandHandler
+    wordle: BaseCommandHandler
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.utils = self.bot.utils
-        self.wordle = self.bot.wordle
-        self.connections = self.bot.connections
         self.help_menu = self.bot.help_menu
         self.build_help_menu()
+
+        self.connections = self.bot.connections
+        self.strands = self.bot.strands
+        self.wordle = self.bot.wordle
 
     #####################
     #   COMMAND SETUP   #
@@ -41,6 +47,10 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                     content = '\n'.join(message.content.splitlines()[2:])
                     self.connections.add_entry(user_id, first_two_lines, content)
                     await message.add_reaction('✅')
+                elif 'Strands' in first_line and self.utils.is_strands_submission(first_two_lines):
+                    content = '\n'.join(message.content.splitlines()[2:])
+                    self.strands.add_entry(user_id, first_two_lines, content)
+                    await message.add_reaction('✅')
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -60,10 +70,12 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     async def get_ranks(self, ctx: commands.Context, *args: str) -> None:
         try:
             match self.utils.get_game_from_channel(ctx.message):
-                case NYTGame.WORDLE:
-                    await self.wordle.get_ranks(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.connections.get_ranks(ctx, *args)
+                case NYTGame.STRANDS:
+                    await self.strands.get_ranks(ctx, *args)
+                case NYTGame.WORDLE:
+                    await self.wordle.get_ranks(ctx, *args)
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -73,10 +85,12 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     async def get_missing(self, ctx: commands.Context, *args: str) -> None:
         try:
             match self.utils.get_game_from_channel(ctx.message):
-                case NYTGame.WORDLE:
-                    await self.wordle.get_missing(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.connections.get_missing(ctx, *args)
+                case NYTGame.STRANDS:
+                    await self.strands.get_missing(ctx, *args)
+                case NYTGame.WORDLE:
+                    await self.wordle.get_missing(ctx, *args)
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -86,10 +100,12 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     async def get_entries(self, ctx: commands.Context, *args: str) -> None:
         try:
             match self.utils.get_game_from_channel(ctx.message):
-                case NYTGame.WORDLE:
-                    await self.wordle.get_entries(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.connections.get_entries(ctx, *args)
+                case NYTGame.STRANDS:
+                    await self.strands.get_entries(ctx, *args)
+                case NYTGame.WORDLE:
+                    await self.wordle.get_entries(ctx, *args)
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -99,10 +115,12 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     async def get_entry(self, ctx: commands.Context, *args: str) -> None:
         try:
             match self.utils.get_game_from_channel(ctx.message):
-                case NYTGame.WORDLE:
-                    await self.wordle.get_entry(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.connections.get_entry(ctx, *args)
+                case NYTGame.STRANDS:
+                    await self.strands.get_entry(ctx, *args)
+                case NYTGame.WORDLE:
+                    await self.wordle.get_entry(ctx, *args)
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)
@@ -112,10 +130,12 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
     async def get_stats(self, ctx: commands.Context, *args: str) -> None:
         try:
             match self.utils.get_game_from_channel(ctx.message):
-                case NYTGame.WORDLE:
-                    await self.wordle.get_stats(ctx, *args)
                 case NYTGame.CONNECTIONS:
                     await self.connections.get_stats(ctx, *args)
+                case NYTGame.STRANDS:
+                    await self.strands.get_stats(ctx, *args)
+                case NYTGame.WORDLE:
+                    await self.wordle.get_stats(ctx, *args)
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)

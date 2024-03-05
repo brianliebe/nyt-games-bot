@@ -10,8 +10,9 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 
 class NYTGame(Enum):
-    WORDLE = auto()
     CONNECTIONS = auto()
+    STRANDS = auto()
+    WORDLE = auto()
     UNKNOWN = auto()
 
 class BotUtilities():
@@ -23,10 +24,12 @@ class BotUtilities():
 
     def get_game_from_channel(self, message: discord.Message) -> NYTGame:
         channel_name: str = message.channel.name.lower()
-        if 'wordle' in channel_name:
-            return NYTGame.WORDLE
-        elif 'connections' in channel_name:
+        if 'connections' in channel_name:
             return NYTGame.CONNECTIONS
+        elif 'strands' in channel_name:
+            return NYTGame.STRANDS
+        elif 'wordle' in channel_name:
+            return NYTGame.WORDLE
         else:
             return NYTGame.UNKNOWN
 
@@ -58,6 +61,9 @@ class BotUtilities():
 
     def is_connections_submission(self, lines: str) -> str:
         return re.match(r'^Connections *(\n)Puzzle( #)*\d+( )*$', lines)
+
+    def is_strands_submission(self, lines: str) -> str:
+        return re.match(r'Strands #\d+(\n)".*"', lines)
 
     # DATES/TIMES
 
