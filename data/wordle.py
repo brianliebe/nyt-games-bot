@@ -1,10 +1,10 @@
-import re, os
+import os, re
 from datetime import date
+from data.base_data_handler import BaseDatabaseHandler
+from models.wordle import WordlePuzzleEntry
 from utils.bot_utilities import BotUtilities
-from utils.db_handler import DatabaseHandler
-from models.wordle_entry import WordlePuzzleEntry
 
-class WordleDatabaseHandler(DatabaseHandler):
+class WordleDatabaseHandler(BaseDatabaseHandler):
     def __init__(self, utils: BotUtilities) -> None:
         # init
         super().__init__(utils)

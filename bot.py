@@ -1,7 +1,7 @@
 import os, discord, asyncio
 from discord.ext import commands
-from utils.connections_db import ConnectionsDatabaseHandler
-from utils.wordle_db import WordleDatabaseHandler
+from games.connections import ConnectionsCommandHandler
+from games.wordle import WordleCommandHandler
 from utils.bot_utilities import BotUtilities
 from utils.help_handler import HelpMenuHandler
 
@@ -23,26 +23,31 @@ activity = discord.Game(name="?help")
 bot = commands.Bot(command_prefix='?', intents=intents, activity=activity, help_command=None)
 bot.guild_id = int(guild_id) if guild_id.isnumeric() else -1
 bot.utils = BotUtilities(client, bot)
-bot.wordle_db = WordleDatabaseHandler(bot.utils)
-bot.conns_db = ConnectionsDatabaseHandler(bot.utils)
 bot.help_menu = HelpMenuHandler()
+
+# create games
+bot.wordle = WordleCommandHandler(bot.utils)
+bot.connections = ConnectionsCommandHandler(bot.utils)
 
 # load the cogs
 async def main():
-    async with bot:
-        for extension in ['cogs.members', 'cogs.owner']:
-            try:
-                await bot.load_extension(extension)
-            except Exception as e:
-                print(f"Failed to load extension '{extension}'.\n{e}")
-        await bot.start(token, reconnect=True)
+    try:
+        async with bot:
+            for extension in ['cogs.members', 'cogs.owner']:
+                try:
+                    await bot.load_extension(extension)
+                except Exception as e:
+                    print(f"Failed to load extension '{extension}'.\n{e}")
+            await bot.start(token, reconnect=True)
+    except Exception as e:
+        print(f"Failed to start: {e}")
 
 # load the database when ready
 @bot.event
 async def on_ready():
     try:
-        bot.wordle_db.connect()
-        bot.conns_db.connect()
+        bot.wordle.connect()
+        bot.connections.connect()
         print("Database loaded & successfully logged in.")
     except Exception as e:
         print(f"Failed to load database: {e}")

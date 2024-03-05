@@ -1,11 +1,11 @@
-import re, os
-from datetime import date
+import os, re
 from collections import Counter
-from models.connections_entry import ConnectionsPuzzleEntry
+from datetime import date
+from data.base_data_handler import BaseDatabaseHandler
+from models.connections import ConnectionsPuzzleEntry
 from utils.bot_utilities import BotUtilities
-from utils.db_handler import DatabaseHandler
 
-class ConnectionsDatabaseHandler(DatabaseHandler):
+class ConnectionsDatabaseHandler(BaseDatabaseHandler):
     def __init__(self, utils: BotUtilities) -> None:
         # init
         super().__init__(utils)

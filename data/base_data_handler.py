@@ -1,10 +1,10 @@
 from datetime import date
-from utils.bot_utilities import BotUtilities
 from typing import Protocol
 from mysql.connector import MySQLConnection, connect
 from mysql.connector.cursor import MySQLCursor
+from utils.bot_utilities import BotUtilities
 
-class DatabaseHandler(Protocol):
+class BaseDatabaseHandler(Protocol):
     _utils: BotUtilities
     _db: MySQLConnection
     _cur: MySQLCursor
@@ -19,6 +19,17 @@ class DatabaseHandler(Protocol):
         self._utils = utils
         self._db = None
         self._cur = None
+
+    ####################
+    # ABSTRACT METHODS #
+    ####################
+
+    def add_entry(self, user_id: str, title: str, puzzle: str) -> bool:
+        pass
+
+    ####################
+    #   BASE METHODS   #
+    ####################
 
     def remove_entry(self, user_id: str, puzzle_id: int) -> bool:
         if not self._db.is_connected():
@@ -91,3 +102,6 @@ class DatabaseHandler(Protocol):
             self.connect()
         self._cur.execute(f"select distinct user_id from entries where puzzle_id = {puzzle_id}")
         return [row[0] for row in self._cur.fetchall()]
+
+    def get_entries_by_player(self, user_id: str, puzzle_list: list[int] = []) -> list[object]:
+        pass

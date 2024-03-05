@@ -1,4 +1,4 @@
-import re, io, discord
+import discord, io, re
 import matplotlib.pyplot as plt
 from bokeh.io.export import get_screenshot_as_png
 from bokeh.models import ColumnDataSource, DataTable, TableColumn

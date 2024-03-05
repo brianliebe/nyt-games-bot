@@ -1,9 +1,8 @@
 import statistics as stats
-from models.connections_entry import ConnectionsPuzzleEntry
-from utils.connections_db import ConnectionsDatabaseHandler
+from data.base_data_handler import BaseDatabaseHandler
 
 class ConnectionsPlayerStats():
-    def __init__(self, user_id: str, puzzle_list: list[int], db: ConnectionsDatabaseHandler) -> None:
+    def __init__(self, user_id: str, puzzle_list: list[int], db: BaseDatabaseHandler) -> None:
         self.user_id = user_id
 
         player_puzzles = db.get_puzzles_by_player(self.user_id)
@@ -21,3 +20,10 @@ class ConnectionsPlayerStats():
 
     def get_stat_list(self) -> tuple[float, float]:
         return self.raw_mean, self.adj_mean
+
+class ConnectionsPuzzleEntry():
+    def __init__(self, puzzle_id: int, user_id: str, score: int, puzzle_str: str) -> None:
+        self.puzzle_id = puzzle_id
+        self.user_id = user_id
+        self.score = score
+        self.puzzle_str = puzzle_str
