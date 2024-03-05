@@ -60,10 +60,10 @@ class BotUtilities():
         return re.match(r'^Wordle \d+ \d{1}/\d{1}$', line) or re.match(r'^Wordle \d+ X/\d{1}$', line)
 
     def is_connections_submission(self, lines: str) -> str:
-        return re.match(r'^Connections *(\n)Puzzle( #)*\d+( )*$', lines)
+        return re.match(r'^Connections *(\n)Puzzle #\d+', lines)
 
     def is_strands_submission(self, lines: str) -> str:
-        return re.match(r'Strands #\d+(\n)("|“|”).*("|“|”)', lines)
+        return re.match(r'Strands #\d+', lines)
 
     # DATES/TIMES
 

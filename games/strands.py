@@ -149,7 +149,7 @@ class StrandsCommandHandler(BaseCommandHandler):
 
         missing_ids = [user_id for user_id in self.db.get_all_players() if user_id not in self.db.get_players_by_puzzle_id(puzzle_id)]
         if len(missing_ids) == 0:
-            await ctx.reply(f"All known players have submitted Puzzle #{puzzle_id}!")
+            await ctx.reply(f"All tracked players have submitted Puzzle #{puzzle_id}!")
         else:
             await ctx.reply("The following players are missing Puzzle #{}: <@{}>".format(puzzle_id, '>, <@'.join(missing_ids)))
 
@@ -330,15 +330,15 @@ class StrandsCommandHandler(BaseCommandHandler):
             await ctx.reply(f"Could not find entry for Puzzle #{puzzle_id} for user <@{user_id}>.")
 
     async def add_score(self, ctx: commands.Context, *args: str) -> None:
-        if args is not None and len(args) >= 4:
+        if args is not None and len(args) >= 3:
             if self.utils.is_user(args[0]):
                 user_id = args[0].strip("<>@! ")
-                title = f"{args[1]}\n{args[2]} {args[3]}"
-                content = '\n'.join(args[4:])
+                title = f"{args[1]} {args[2]}"
+                content = '\n'.join(args[3:])
             else:
                 user_id = str(ctx.author.id)
-                title = f"{args[0]}\n{args[1]} {args[2]}"
-                content = '\n'.join(args[3:])
+                title = f"{args[0]} {args[1]}"
+                content = '\n'.join(args[2:])
             if self.utils.is_strands_submission(title):
                 self.db.add_entry(user_id, title, content)
                 await ctx.message.add_reaction('✅')

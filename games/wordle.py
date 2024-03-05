@@ -158,7 +158,7 @@ class WordleCommandHandler(BaseCommandHandler):
 
         missing_ids = [user_id for user_id in self.db.get_all_players() if user_id not in self.db.get_players_by_puzzle_id(puzzle_id)]
         if len(missing_ids) == 0:
-            await ctx.reply(f"All known players have submitted Puzzle #{puzzle_id}!")
+            await ctx.reply(f"All tracked players have submitted Puzzle #{puzzle_id}!")
         else:
             await ctx.reply("The following players are missing Puzzle #{}: <@{}>".format(puzzle_id, '>, <@'.join(missing_ids)))
 
