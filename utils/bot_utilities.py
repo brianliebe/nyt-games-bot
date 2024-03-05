@@ -63,7 +63,7 @@ class BotUtilities():
         return re.match(r'^Connections *(\n)Puzzle( #)*\d+( )*$', lines)
 
     def is_strands_submission(self, lines: str) -> str:
-        return re.match(r'Strands #\d+(\n)".*"', lines)
+        return re.match(r'Strands #\d+(\n)("|“|”).*("|“|”)', lines)
 
     # DATES/TIMES
 
