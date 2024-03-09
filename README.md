@@ -1,31 +1,39 @@
 # NYT Games Discord Bot 🤖
 
-### A little Discord bot that tracks users' Wordle and Connections scores and maintains a leaderboard.
+### A little Discord bot that tracks Wordle, Connections, and Strands scores and maintains a server leaderboard.
 
 Track the daily, weekly, and all-time leaderboards for your server, plus get some additional stats on how well you've played. Just copy & paste your game results into Discord chat and the bot will track it.
 
-### 🟩 🟨 ⬜ / 🟨 🟩 🟦 🟪
+### 🟩 🟨 ⬜ • 🟨 🟩 🟦 🟪 • 🔵 💡 🟡
 
 ## Commands
 - `?ranks (today|week|all-time|<puzzle #>)`
-  - Bot will reply with the ranked leaderboard based on the query time period/puzzle #. Defaults to week.
+  - View ranked leaderboard for today, this week, all-time, or for a specific puzzle. Defaults to this week.
 - `?missing (today|<puzzle #>)`
-  - Bot will reply and @mention users that are missing the puzzle. Defaults to today.
+  - View users that are missing today's puzzle or missing the specified puzzle. Defaults to today.
 - `?entries [<user>]`
-  - Bot will reply with the recorded entries in the database for \<user\>. Defaults to requester.
+  - View recorded entries in the database for \<user\>. Defaults to requester.
 - `?stats [<user1> <user2> ...]`
-  - Bot will reply with data on the user's average scores, etc. Defaults to requester. (More data coming soon maybe...)
+  - View game stats for one or more users. Defaults to requester.
+- `?view [<user>] <puzzle #1> [<puzzle #2> ...]`
+  - View entries for a user and one or more puzzles. Defaults to requester.
+
+## Admin Commands
 - `?add [<user>] <puzzle output>`
-  - Bot will record the Wordle puzzle entry for a user. Defaults to requester.
-  - NOTE: `?add` is NOT needed to record entries. Just paste the output from Wordle right into the the channel and the bot will record it. The bot will react to your message with a ✅ to let you know it has been counted.
+  - Manually add puzzle entry for a user. Defaults to requester.
+- `?remove [<user>] <puzzle #>`
+  - Manually remove puzzle entry for a user. Defaults to requester.
+
+NOTE: `?add` is NOT needed to record entries. Just paste the output from the game right into the the channel and the bot will record it. The bot will react to your message with a ✅ to let you know it has been counted.
 
 ## Example Usage
 
 1. Adding a score normally (without `?add`):
 
-![image](https://user-images.githubusercontent.com/25470007/213812178-79617256-3a1f-4968-b311-1f111181ac32.png)
-<img width="195" alt="image" src="https://github.com/brianliebe/nyt-games-bot/assets/25470007/066219c6-75da-477e-8f97-439dc34196e7">
-
+<img height="200" alt="image" src="https://github.com/brianliebe/nyt-games-bot/assets/25470007/8b747069-fce8-4e49-9622-cce648d66ff7">
+<img height="200" alt="image" src="https://github.com/brianliebe/nyt-games-bot/assets/25470007/066219c6-75da-477e-8f97-439dc34196e7">
+<img height="200" alt="image" src="https://github.com/brianliebe/nyt-games-bot/assets/25470007/76e31297-f7ef-4283-96de-4b599d7271f7">
+<br/><br/>
 
 2. Viewing the leaderboard with `?ranks`:
 
@@ -49,4 +57,4 @@ Track the daily, weekly, and all-time leaderboards for your server, plus get som
 
 ## Notes
 
-This project is not complete and you might need some tweaking to get this up-and-running on a new server. To deploy this yourself, I highly suggest taking a look at [this](https://realpython.com/how-to-make-a-discord-bot-python/) guide.
+To create your own bot and deploy this yourself, I highly suggest taking a look at [this](https://realpython.com/how-to-make-a-discord-bot-python/) guide.
