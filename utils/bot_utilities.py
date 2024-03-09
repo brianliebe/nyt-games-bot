@@ -102,7 +102,7 @@ class BotUtilities():
         for column in df_columns:
             columns_for_table.append(TableColumn(field=column, title=column))
 
-        data_table = DataTable(source=source, columns=columns_for_table, index_position=None, reorderable=False)
+        data_table = DataTable(source=source, columns=columns_for_table, index_position=None, reorderable=False, autosize_mode="fit_columns")
 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--disable-dev-shm-usage")
