@@ -25,13 +25,13 @@ class ConnectionsDatabaseHandler(BaseDatabaseHandler):
     ####################
 
     def add_entry(self, user_id: str, title: str, puzzle: str) -> bool:
-        puzzle_id_title = re.findall(r'\d+', title)
+        puzzle_id_title = re.findall(r'[\d,]+', title)
         score = self.__get_score_from_puzzle(puzzle)
 
         if puzzle_id_title:
-            puzzle_id = int(puzzle_id_title[0])
+            puzzle_id = int(str(puzzle_id_title[0]).replace(',', ''))
         else:
-            return
+            return False
 
         if not self._db.is_connected():
             self.connect()

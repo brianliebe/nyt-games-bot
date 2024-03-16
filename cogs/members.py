@@ -41,16 +41,22 @@ class MembersCog(commands.Cog, name="Normal Members Commands"):
                 # add entry to either Wordle or Connections
                 if 'Wordle' in first_line and self.utils.is_wordle_submission(first_line):
                     content = '\n'.join(message.content.splitlines()[1:])
-                    self.wordle.add_entry(user_id, first_line, content)
-                    await message.add_reaction('✅')
+                    if self.wordle.add_entry(user_id, first_line, content):
+                        await message.add_reaction('✅')
+                    else:
+                        await message.add_reaction('❌')
                 elif 'Connections' in first_line and self.utils.is_connections_submission(first_two_lines):
                     content = '\n'.join(message.content.splitlines()[2:])
-                    self.connections.add_entry(user_id, first_two_lines, content)
-                    await message.add_reaction('✅')
+                    if self.connections.add_entry(user_id, first_two_lines, content):
+                        await message.add_reaction('✅')
+                    else:
+                        await message.add_reaction('❌')
                 elif 'Strands' in first_line and self.utils.is_strands_submission(first_two_lines):
                     content = '\n'.join(message.content.splitlines()[2:])
-                    self.strands.add_entry(user_id, first_two_lines, content)
-                    await message.add_reaction('✅')
+                    if self.strands.add_entry(user_id, first_two_lines, content):
+                        await message.add_reaction('✅')
+                    else:
+                        await message.add_reaction('❌')
         except Exception as e:
             print(f"Caught exception: {e}")
             traceback.print_exception(e)

@@ -25,13 +25,26 @@ class WordleDatabaseHandler(BaseDatabaseHandler):
 
     def add_entry(self, user_id: str, title: str, puzzle: str) -> bool:
         if 'X/6' in title:
-            puzzle_id, _ = re.findall(r'\d+', title)
-            score = 7
+            reg_match = re.search(r'\d{1,3}(,\d{3})*', title)
+            if reg_match:
+                puzzle_id = reg_match.group(0).replace(',', '')
+                score = 7
+            else:
+                return False
         else:
-            puzzle_id, score, _ = re.findall(r'\d+', title)
-            score = int(score)
+            reg_match = re.search(r'\d{1,3}(,\d{3})*', title)
+            if reg_match:
+                puzzle_id = reg_match.group(0).replace(',', '')
+                reg_match = re.search(r'(\d)\/(\d)', title)
+                if reg_match:
+                    score = reg_match.group(1)
+                else:
+                    return False
+            else:
+                return False
 
         puzzle_id = int(puzzle_id)
+        score = int(score)
 
         total_green = puzzle.count('🟩')
         total_yellow = puzzle.count('🟨')

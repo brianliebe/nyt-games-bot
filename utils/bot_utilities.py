@@ -57,7 +57,7 @@ class BotUtilities():
             return False
 
     def is_wordle_submission(self, line: str) -> str:
-        return re.match(r'^Wordle \d+ \d{1}/\d{1}$', line) or re.match(r'^Wordle \d+ X/\d{1}$', line)
+        return re.match(r'^Wordle (\d+|\d{1,3}(,\d{3})*) (\d|X)\/\d$', line)
 
     def is_connections_submission(self, lines: str) -> str:
         return re.match(r'^Connections *(\n)Puzzle #\d+', lines)

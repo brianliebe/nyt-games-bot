@@ -359,7 +359,9 @@ class WordleCommandHandler(BaseCommandHandler):
                 title = ' '.join(args[0:3])
                 content = '\n'.join(args[3:])
             if self.utils.is_wordle_submission(title):
-                self.db.add_entry(user_id, title, content)
-                await ctx.message.add_reaction('✅')
+                if self.db.add_entry(user_id, title, content):
+                    await ctx.message.add_reaction('✅')
+                else:
+                    await ctx.message.add_reaction('❌')
         else:
             await ctx.reply("To manually add a Wordle score, please use `?add <user> <Wordle output>` (specifying a user is optional).")

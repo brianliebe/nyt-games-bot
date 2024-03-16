@@ -340,7 +340,9 @@ class StrandsCommandHandler(BaseCommandHandler):
                 title = f"{args[0]} {args[1]}"
                 content = '\n'.join(args[2:])
             if self.utils.is_strands_submission(title):
-                self.db.add_entry(user_id, title, content)
-                await ctx.message.add_reaction('✅')
+                if self.db.add_entry(user_id, title, content):
+                    await ctx.message.add_reaction('✅')
+                else:
+                    await ctx.message.add_reaction('❌')
         else:
             await ctx.reply("To manually add a Strands score, please use `?add <user> <Strands output>` (specifying a user is optional).")

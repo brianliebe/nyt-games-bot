@@ -341,7 +341,9 @@ class ConnectionsCommandHandler(BaseCommandHandler):
                 title = f"{args[0]}\n{args[1]} {args[2]}"
                 content = '\n'.join(args[3:])
             if self.utils.is_connections_submission(title):
-                self.db.add_entry(user_id, title, content)
-                await ctx.message.add_reaction('✅')
+                if self.db.add_entry(user_id, title, content):
+                    await ctx.message.add_reaction('✅')
+                else:
+                    await ctx.message.add_reaction('❌')
         else:
             await ctx.reply("To manually add a Connections score, please use `?add <user> <Connections output>` (specifying a user is optional).")
