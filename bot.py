@@ -42,9 +42,7 @@ async def main():
                     print(f"Failed to load extension '{extension}'.\n{e}")
             await bot.start(token, reconnect=True)
     except asyncio.exceptions.CancelledError as e:
-        print('Caught user exit, exiting...')
-    except KeyboardInterrupt as e:
-        print('Caught user keyboard interrupt, exiting...')
+        print('\nCaught user exit, exiting...')
 
 
 # load the database when ready
