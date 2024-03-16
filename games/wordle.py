@@ -350,7 +350,7 @@ class WordleCommandHandler(BaseCommandHandler):
 
     async def add_score(self, ctx: commands.Context, *args: str) -> None:
         if args is not None and len(args) >= 4:
-            start_index = self.__get_puzzle_index(args)
+            start_index = self.__get_puzzle_index(*args)
             if self.utils.is_user(args[0]):
                 user_id = args[0].strip("<>@! ")
                 title = ' '.join(args[1:start_index])
