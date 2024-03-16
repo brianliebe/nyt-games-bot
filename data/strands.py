@@ -44,13 +44,15 @@ class StrandsDatabaseHandler(BaseDatabaseHandler):
                 f"update entries set hints = {hints}, puzzle_str = '{puzzle}' "
                     + f"where user_id = '{user_id}' and puzzle_id = '{puzzle_id}'"
             )
+            self._db.commit()
+            return True
         else:
             self._cur.execute(
                 "insert into entries (puzzle_id, user_id, hints, puzzle_str) "
                     + f"values ({puzzle_id}, {user_id}, {hints}, '{puzzle}')"
             )
-        self._db.commit()
-        return self._cur.rowcount > 0
+            self._db.commit()
+            return self._cur.rowcount > 0
 
     ####################
     #  PLAYER METHODS  #

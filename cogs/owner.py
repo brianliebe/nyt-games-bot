@@ -34,7 +34,6 @@ class OwnerCog(commands.Cog, name="Owner-Only Commands"):
             case NYTGame.WORDLE:
                 await self.wordle.remove_entry(ctx, *args)
 
-
     @commands.is_owner()
     @commands.command(name='add', help='Manually adds a puzzle entry for a player')
     async def add_score(self, ctx: commands.Context, *args: str) -> None:

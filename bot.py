@@ -33,13 +33,19 @@ bot.wordle = WordleCommandHandler(bot.utils)
 
 # load the cogs
 async def main():
-    async with bot:
-        for extension in ['cogs.members', 'cogs.owner']:
-            try:
-                await bot.load_extension(extension)
-            except Exception as e:
-                print(f"Failed to load extension '{extension}'.\n{e}")
-        await bot.start(token, reconnect=True)
+    try:
+        async with bot:
+            for extension in ['cogs.members', 'cogs.owner']:
+                try:
+                    await bot.load_extension(extension)
+                except Exception as e:
+                    print(f"Failed to load extension '{extension}'.\n{e}")
+            await bot.start(token, reconnect=True)
+    except asyncio.exceptions.CancelledError as e:
+        print('Caught user exit, exiting...')
+    except KeyboardInterrupt as e:
+        print('Caught user keyboard interrupt, exiting...')
+
 
 # load the database when ready
 @bot.event

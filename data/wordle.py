@@ -62,13 +62,15 @@ class WordleDatabaseHandler(BaseDatabaseHandler):
                 f"update entries set score = {score}, green = {total_green}, yellow = {total_yellow}, other = {total_other} "
                     + f"where user_id = '{user_id}' and puzzle_id = '{puzzle_id}'"
             )
+            self._db.commit()
+            return True
         else:
             self._cur.execute(
                 "insert into entries (puzzle_id, user_id, score, green, yellow, other) "
                     + f"values ({puzzle_id}, {user_id}, {score}, {total_green}, {total_yellow}, {total_other})"
             )
-        self._db.commit()
-        return self._cur.rowcount > 0
+            self._db.commit()
+            return self._cur.rowcount > 0
 
     ####################
     #  PLAYER METHODS  #
