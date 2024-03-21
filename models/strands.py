@@ -41,7 +41,7 @@ class StrandsPuzzleEntry(BasePuzzleEntry):
         self.spangram_index = self.__get_spangram_index(puzzle_str)
 
     def __get_spangram_index(self, puzzle_str: str) -> int:
-        for index, item in enumerate(puzzle_str):
+        for index, item in enumerate(puzzle_str.strip().replace('\n', '')):
             if item == '🟡':
                 return index + 1
         return -1
