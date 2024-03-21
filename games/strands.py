@@ -98,7 +98,7 @@ class StrandsCommandHandler(BaseCommandHandler):
                     ]
         elif query_type == PuzzleQueryType.MULTI_PUZZLE:
             # stats for 2+ puzzles, but not all-time
-            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', 'Avg 🟡 Index' '🧩', '🚫'])
+            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', 'Avg 🟡 Index', '🧩', '🚫'])
             for i, player_stats in enumerate(stats):
                 if i > 0 and player_stats.get_stat_list() == stats[i - 1].get_stat_list():
                     player_stats.rank = stats[i - 1].rank
@@ -115,7 +115,7 @@ class StrandsCommandHandler(BaseCommandHandler):
                     ]
         elif query_type == PuzzleQueryType.ALL_TIME:
             # stats for 2+ puzzles, for all-time
-            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', 'Avg 🟡 Index' '🧩'])
+            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', 'Avg 🟡 Index', '🧩'])
             for i, player_stats in enumerate(stats):
                 if i > 0 and player_stats.get_stat_list() == stats[i - 1].get_stat_list():
                     player_stats.rank = stats[i - 1].rank
