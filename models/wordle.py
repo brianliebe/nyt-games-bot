@@ -1,7 +1,13 @@
 import statistics as stats
 from data.base_data_handler import BaseDatabaseHandler
+from models.base_game import BasePlayerStats, BasePuzzleEntry
 
-class WordlePlayerStats():
+class WordlePlayerStats(BasePlayerStats):
+    # wordle-specific stats
+    avg_green: float
+    avg_yellow: float
+    avg_other: float
+
     def __init__(self, user_id: str, puzzle_list: list[int], db: BaseDatabaseHandler) -> None:
         self.user_id = user_id
 
@@ -27,7 +33,13 @@ class WordlePlayerStats():
     def get_stat_list(self) -> list[float, float, float, float, float]:
         return [self.raw_mean, self.adj_mean, self.avg_green, self.avg_yellow, self.avg_other]
 
-class WordlePuzzleEntry():
+class WordlePuzzleEntry(BasePuzzleEntry):
+    # wordle-specific details
+    score: int
+    green: int
+    yellow: int
+    other: int
+
     def __init__(self, puzzle_id: int, user_id: str, score: int, green: int, yellow: int, other: int) -> None:
         self.puzzle_id = puzzle_id
         self.user_id = user_id

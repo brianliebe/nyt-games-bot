@@ -82,7 +82,7 @@ class StrandsCommandHandler(BaseCommandHandler):
 
         if query_type == PuzzleQueryType.SINGLE_PUZZLE:
             # stats for just 1 puzzle
-            df = pd.DataFrame(columns=['Rank', 'User', 'Hints'])
+            df = pd.DataFrame(columns=['Rank', 'User', 'Hints', '🟡 Index'])
             for i, player_stats in enumerate(stats):
                 if i > 0 and player_stats.get_stat_list() == stats[i - 1].get_stat_list():
                     player_stats.rank = stats[i - 1].rank
@@ -94,10 +94,11 @@ class StrandsCommandHandler(BaseCommandHandler):
                         player_stats.rank,
                         self.utils.get_nickname(player_stats.user_id),
                         f"{player_stats.raw_mean:d}"
+                        f"{player_stats.avg_spangram_index:d}"
                     ]
         elif query_type == PuzzleQueryType.MULTI_PUZZLE:
             # stats for 2+ puzzles, but not all-time
-            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', '🧩', '🚫'])
+            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', 'Avg 🟡 Index' '🧩', '🚫'])
             for i, player_stats in enumerate(stats):
                 if i > 0 and player_stats.get_stat_list() == stats[i - 1].get_stat_list():
                     player_stats.rank = stats[i - 1].rank
@@ -108,12 +109,13 @@ class StrandsCommandHandler(BaseCommandHandler):
                         player_stats.rank,
                         self.utils.get_nickname(player_stats.user_id),
                         f"{player_stats.adj_mean:.2f} ({player_stats.raw_mean:.2f})",
+                        f"{player_stats.avg_spangram_index:.2f}",
                         len(valid_puzzles) - player_stats.missed_games,
                         player_stats.missed_games
                     ]
         elif query_type == PuzzleQueryType.ALL_TIME:
             # stats for 2+ puzzles, for all-time
-            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', '🧩'])
+            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', 'Avg 🟡 Index' '🧩'])
             for i, player_stats in enumerate(stats):
                 if i > 0 and player_stats.get_stat_list() == stats[i - 1].get_stat_list():
                     player_stats.rank = stats[i - 1].rank
@@ -124,6 +126,7 @@ class StrandsCommandHandler(BaseCommandHandler):
                         player_stats.rank,
                         self.utils.get_nickname(player_stats.user_id),
                         f"{player_stats.raw_mean:.2f}",
+                        f"{player_stats.avg_spangram_index:.2f}",
                         len(valid_puzzles) - player_stats.missed_games
                     ]
 
