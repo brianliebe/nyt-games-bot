@@ -252,13 +252,14 @@ class StrandsCommandHandler(BaseCommandHandler):
                     await ctx.reply(f"Couldn't find user(s): <@{'>, <@'.join(unknown_ids)}>")
                     return
 
-        df = pd.DataFrame(columns=['User', 'Avg Hints', '🧩', '🚫'])
+        df = pd.DataFrame(columns=['User', 'Avg Hints', 'Avg 🟡 Index', '🧩', '🚫'])
         for i, user_id in enumerate(user_ids):
             puzzle_list = self.db.get_puzzles_by_player(user_id)
             player_stats = StrandsPlayerStats(user_id, puzzle_list, self.db)
             df.loc[i] = [
                 self.utils.get_nickname(user_id),
                 f"{player_stats.raw_mean:.4f}",
+                f"{player_stats.avg_spangram_index:.4f}",
                 len(puzzle_list),
                 len(self.db.get_all_puzzles()) - len(puzzle_list),
             ]
