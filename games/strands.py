@@ -82,7 +82,7 @@ class StrandsCommandHandler(BaseCommandHandler):
 
         if query_type == PuzzleQueryType.SINGLE_PUZZLE:
             # stats for just 1 puzzle
-            df = pd.DataFrame(columns=['Rank', 'User', 'Hints', '🟡 Index', 'Rating'])
+            df = pd.DataFrame(columns=['Rank', 'User', 'Rating', 'Hints', '🟡 Index'])
             for i, player_stats in enumerate(stats):
                 if i > 0 and player_stats.get_stat_list() == stats[i - 1].get_stat_list():
                     player_stats.rank = stats[i - 1].rank
@@ -93,13 +93,13 @@ class StrandsCommandHandler(BaseCommandHandler):
                     df.loc[i] = [
                         player_stats.rank,
                         self.utils.get_nickname(player_stats.user_id),
+                        f"{player_stats.avg_rating_raw:.2f}",
                         f"{player_stats.avg_hints:d}",
-                        f"{player_stats.avg_spangram_index:d}",
-                        f"{player_stats.avg_rating_raw:.2f}"
+                        f"{player_stats.avg_spangram_index:d}"
                     ]
         elif query_type == PuzzleQueryType.MULTI_PUZZLE:
             # stats for 2+ puzzles, but not all-time
-            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', 'Avg 🟡 Index', 'Avg Rating', '🧩', '🚫'])
+            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Rating', 'Avg Hints', 'Avg 🟡 Index', '🧩', '🚫'])
             for i, player_stats in enumerate(stats):
                 if i > 0 and player_stats.get_stat_list() == stats[i - 1].get_stat_list():
                     player_stats.rank = stats[i - 1].rank
@@ -109,15 +109,15 @@ class StrandsCommandHandler(BaseCommandHandler):
                     df.loc[i] = [
                         player_stats.rank,
                         self.utils.get_nickname(player_stats.user_id),
+                        f"{player_stats.avg_rating_adj:.2f} ({player_stats.avg_rating_raw:.2f})",
                         f"{player_stats.avg_hints:.2f}",
                         f"{player_stats.avg_spangram_index:.2f}",
-                        f"{player_stats.avg_rating_adj:.2f} ({player_stats.avg_rating_raw:.2f})",
                         len(valid_puzzles) - player_stats.missed_games,
                         player_stats.missed_games
                     ]
         elif query_type == PuzzleQueryType.ALL_TIME:
             # stats for 2+ puzzles, for all-time
-            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Hints', 'Avg 🟡 Index', 'Avg Rating', '🧩', '🚫'])
+            df = pd.DataFrame(columns=['Rank', 'User', 'Avg Rating', 'Avg Hints', 'Avg 🟡 Index', '🧩', '🚫'])
             for i, player_stats in enumerate(stats):
                 if i > 0 and player_stats.get_stat_list() == stats[i - 1].get_stat_list():
                     player_stats.rank = stats[i - 1].rank
@@ -127,9 +127,9 @@ class StrandsCommandHandler(BaseCommandHandler):
                     df.loc[i] = [
                         player_stats.rank,
                         self.utils.get_nickname(player_stats.user_id),
+                        f"{player_stats.avg_rating_raw:.2f}",
                         f"{player_stats.avg_hints:.2f}",
                         f"{player_stats.avg_spangram_index:.2f}",
-                        f"{player_stats.avg_rating_raw:.2f}",
                         len(valid_puzzles) - player_stats.missed_games,
                         player_stats.missed_games
                     ]
@@ -203,7 +203,7 @@ class StrandsCommandHandler(BaseCommandHandler):
 
         if user_id in self.db.get_all_players():
             user_puzzles: list[StrandsPuzzleEntry] = self.db.get_entries_by_player(user_id)
-            df = pd.DataFrame(columns=['User', 'Puzzle', 'Hints', '🟡 Index', 'Rating'])
+            df = pd.DataFrame(columns=['User', 'Puzzle', 'Rating', 'Hints', '🟡 Index'])
             for i, puzzle_id in enumerate(puzzle_ids):
                 found_match = False
                 for entry in user_puzzles:
@@ -211,9 +211,9 @@ class StrandsCommandHandler(BaseCommandHandler):
                         df.loc[i] = [
                             self.utils.get_nickname(user_id),
                             f"#{puzzle_id}",
+                            f"{entry.rating:.2f}",
                             f"{entry.hints:d}",
-                            f"{entry.spangram_index:d}",
-                            f"{entry.rating:.2f}"
+                            f"{entry.spangram_index:d}"
                         ]
                         found_match = True
                         break
@@ -260,15 +260,15 @@ class StrandsCommandHandler(BaseCommandHandler):
                     await ctx.reply(f"Couldn't find user(s): <@{'>, <@'.join(unknown_ids)}>")
                     return
 
-        df = pd.DataFrame(columns=['User', 'Avg Hints', 'Avg 🟡 Index', 'Avg Rating', '🧩', '🚫'])
+        df = pd.DataFrame(columns=['User', 'Avg Rating', 'Avg Hints', 'Avg 🟡 Index', '🧩', '🚫'])
         for i, user_id in enumerate(user_ids):
             puzzle_list = self.db.get_puzzles_by_player(user_id)
             player_stats = StrandsPlayerStats(user_id, puzzle_list, self.db)
             df.loc[i] = [
                 self.utils.get_nickname(user_id),
+                f"{player_stats.avg_rating_adj:.2f} ({player_stats.avg_rating_raw:.2f})",
                 f"{player_stats.avg_hints:.2f}",
                 f"{player_stats.avg_spangram_index:.2f}",
-                f"{player_stats.avg_rating_adj:.2f} ({player_stats.avg_rating_raw:.2f})",
                 len(puzzle_list),
                 len(self.db.get_all_puzzles()) - len(puzzle_list),
             ]
