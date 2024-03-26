@@ -203,7 +203,7 @@ class StrandsCommandHandler(BaseCommandHandler):
 
         if user_id in self.db.get_all_players():
             user_puzzles: list[StrandsPuzzleEntry] = self.db.get_entries_by_player(user_id)
-            df = pd.DataFrame(columns=['User', 'Puzzle', 'Rating', 'Hints', '🟡 Index'])
+            df = pd.DataFrame(columns=['User', 'Puzzle #', 'Rating', 'Hints', '🟡 Index', 'Puzzle'])
             for i, puzzle_id in enumerate(puzzle_ids):
                 found_match = False
                 for entry in user_puzzles:
@@ -213,7 +213,8 @@ class StrandsCommandHandler(BaseCommandHandler):
                             f"#{puzzle_id}",
                             f"{entry.rating:.2f}",
                             f"{entry.hints:d}",
-                            f"{entry.spangram_index:d}"
+                            f"{entry.spangram_index:d}",
+                            f"{entry.puzzle_str}"
                         ]
                         found_match = True
                         break
@@ -221,6 +222,7 @@ class StrandsCommandHandler(BaseCommandHandler):
                     df.loc[i] = [
                         self.utils.get_nickname(user_id),
                         f"#{puzzle_id}",
+                        "?",
                         "?",
                         "?",
                         "?"

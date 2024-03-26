@@ -46,12 +46,15 @@ class StrandsPuzzleEntry(BasePuzzleEntry):
         self.puzzle_id = puzzle_id
         self.user_id = user_id
         self.hints = hints
-        self.puzzle_str = puzzle_str
+        self.puzzle_str = self.__clean_puzzle_str(puzzle_str)
         self.spangram_index = self.__get_spangram_index(self.puzzle_str)
         self.rating = self.__get_rating(self.hints, self.spangram_index, self.puzzle_str)
 
+    def __clean_puzzle_str(self, puzzle_str: str) -> str:
+        return puzzle_str.strip().replace('\n', '').replace(' ', '')
+
     def __get_spangram_index(self, puzzle_str: str) -> int:
-        for index, item in enumerate(puzzle_str.strip().replace('\n', '').replace(' ', '')):
+        for index, item in enumerate(puzzle_str):
             if item == '🟡':
                 return index + 1
         return -1
