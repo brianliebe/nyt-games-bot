@@ -10,8 +10,6 @@ class BasePlayerStats(Protocol):
     user_id: str
     missed_games: int
     rank: int
-    raw_mean: float
-    adj_mean: float
 
 class BasePuzzleEntry(Protocol):
     puzzle_id: int

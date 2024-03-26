@@ -3,6 +3,10 @@ from data.base_data_handler import BaseDatabaseHandler
 from models.base_game import BasePlayerStats, BasePuzzleEntry
 
 class ConnectionsPlayerStats(BasePlayerStats):
+    # connections-specific stats
+    raw_mean: float
+    adj_mean: float
+
     def __init__(self, user_id: str, puzzle_list: list[int], db: BaseDatabaseHandler) -> None:
         self.user_id = user_id
 

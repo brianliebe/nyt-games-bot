@@ -7,6 +7,8 @@ class WordlePlayerStats(BasePlayerStats):
     avg_green: float
     avg_yellow: float
     avg_other: float
+    raw_mean: float
+    adj_mean: float
 
     def __init__(self, user_id: str, puzzle_list: list[int], db: BaseDatabaseHandler) -> None:
         self.user_id = user_id
