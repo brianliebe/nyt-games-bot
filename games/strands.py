@@ -266,7 +266,7 @@ class StrandsCommandHandler(BaseCommandHandler):
             player_stats = StrandsPlayerStats(user_id, puzzle_list, self.db)
             df.loc[i] = [
                 self.utils.get_nickname(user_id),
-                f"{player_stats.avg_rating_adj:.2f} ({player_stats.avg_rating_raw:.2f})",
+                f"{player_stats.avg_rating_raw:.2f}",
                 f"{player_stats.avg_hints:.2f}",
                 f"{player_stats.avg_spangram_index:.2f}",
                 len(puzzle_list),
@@ -299,7 +299,7 @@ class StrandsCommandHandler(BaseCommandHandler):
                     ax.bar_label(c, labels=labels, label_type='edge', fontsize=15)
             fig = plt.gcf()
             fig.subplots_adjust(bottom=0.2)
-            fig.set_size_inches(10, 5)
+            fig.set_size_inches(15, 5)
             hist_img = self.utils.fig_to_image(fig)
             hist_img = self.utils.resize_image(hist_img, width = stats_img.size[0])
             plt.close()
