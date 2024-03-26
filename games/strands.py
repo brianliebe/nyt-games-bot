@@ -93,7 +93,7 @@ class StrandsCommandHandler(BaseCommandHandler):
                     df.loc[i] = [
                         player_stats.rank,
                         self.utils.get_nickname(player_stats.user_id),
-                        f"{player_stats.avg_rating_raw:.2f}",
+                        f"{player_stats.avg_rating_raw:.3f}",
                         f"{player_stats.avg_hints:d}",
                         f"{player_stats.avg_spangram_index:d}"
                     ]
@@ -109,7 +109,7 @@ class StrandsCommandHandler(BaseCommandHandler):
                     df.loc[i] = [
                         player_stats.rank,
                         self.utils.get_nickname(player_stats.user_id),
-                        f"{player_stats.avg_rating_adj:.2f} ({player_stats.avg_rating_raw:.2f})",
+                        f"{player_stats.avg_rating_adj:.3f} ({player_stats.avg_rating_raw:.3f})",
                         f"{player_stats.avg_hints:.2f}",
                         f"{player_stats.avg_spangram_index:.2f}",
                         len(valid_puzzles) - player_stats.missed_games,
@@ -127,7 +127,7 @@ class StrandsCommandHandler(BaseCommandHandler):
                     df.loc[i] = [
                         player_stats.rank,
                         self.utils.get_nickname(player_stats.user_id),
-                        f"{player_stats.avg_rating_raw:.2f}",
+                        f"{player_stats.avg_rating_raw:.3f}",
                         f"{player_stats.avg_hints:.2f}",
                         f"{player_stats.avg_spangram_index:.2f}",
                         len(valid_puzzles) - player_stats.missed_games,
