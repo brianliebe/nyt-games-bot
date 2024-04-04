@@ -19,7 +19,12 @@ class ConnectionsCommandHandler(BaseCommandHandler):
     ######################
 
     async def get_ranks(self, ctx: commands.Context, *args: str) -> None:
-        if len(args) == 0 or (len(args) == 1 and args[0] in ['week', 'weekly']):
+        if len(args) == 0 or (len(args) == 1 and args[0] in ['alltime', 'all-time']):
+            # ALL TIME
+            valid_puzzles = self.db.get_all_puzzles()
+            explanation_str = "All-time"
+            query_type = PuzzleQueryType.ALL_TIME
+        elif len(args) == 1 and args[0] in ['week', 'weekly']:
             # WEEKLY
             start_of_week = self.utils.get_week_start(self.utils.get_todays_date())
             todays_puzzle_id = self.db.get_puzzle_by_date(self.utils.get_todays_date())
@@ -32,11 +37,6 @@ class ConnectionsCommandHandler(BaseCommandHandler):
             valid_puzzles = list(range(seven_days_ago_puzzle, seven_days_ago_puzzle + 10))
             explanation_str = "Last 10 Days"
             query_type = PuzzleQueryType.MULTI_PUZZLE
-        elif len(args) == 1 and args[0] in ['alltime', 'all-time']:
-            # ALL TIME
-            valid_puzzles = self.db.get_all_puzzles()
-            explanation_str = "All-time"
-            query_type = PuzzleQueryType.ALL_TIME
         elif len(args) == 1 and args[0] == 'today':
             # TODAY ONLY
             valid_puzzles = [self.db.get_puzzle_by_date(self.utils.get_todays_date())]
