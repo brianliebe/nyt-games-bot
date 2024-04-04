@@ -57,7 +57,7 @@ class StrandsPuzzleEntry(BasePuzzleEntry):
         for index, item in enumerate(puzzle_str):
             if item == '🟡':
                 return index + 1
-        return -1
+        return len(puzzle_str) + 1
 
     def __get_rating(self, hints: int, spangram_index: int, puzzle_str: str) -> float:
         word_count = puzzle_str.count('🔵')
